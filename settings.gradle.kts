@@ -21,4 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Dsquare Task"
 include(":app")
- 
+include(":dsquares")
