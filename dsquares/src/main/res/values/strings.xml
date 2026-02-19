@@ -1,0 +1,14 @@
+<resources>
+    <string name="enter_phone_number">Enter your phone number</string>
+    <string name="enter_phone_number_subtitle">Please enter your phone number to login</string>
+    <string name="login">Login</string>
+    <string name="coupons">Coupons</string>
+    <string name="coupons_title">Coupons</string>
+    <string name="search_coupons">Search for coupons…</string>
+    <string name="all">All</string>
+    <string name="from_label">From</string>
+    <string name="points_label">points</string>
+    <string name="discount_percent">%1$s%% off</string>
+    <string name="locked">Locked</string>
+    <string name="upgrade_to_next_package">Upgrade to the next package 🌟✨</string>
+</resources>

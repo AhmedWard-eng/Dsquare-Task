@@ -1,0 +1,14 @@
+<resources>
+    <string name="enter_phone_number">ادخل رقم الهاتف</string>
+    <string name="enter_phone_number_subtitle">من فضلك ادخل رقم الهاتف لتسجيل الدخول</string>
+    <string name="login">تسجيل الدخول</string>
+    <string name="coupons">القسائم</string>
+    <string name="coupons_title">قسائم</string>
+    <string name="search_coupons">البحث عن القسائم…..</string>
+    <string name="all">الكل</string>
+    <string name="from_label">من</string>
+    <string name="points_label">نقطة</string>
+    <string name="discount_percent">خصم %1$s%%</string>
+    <string name="locked">مقفل</string>
+    <string name="upgrade_to_next_package">الترقية إلى الحزمة التالية 🌟✨</string>
+</resources>
