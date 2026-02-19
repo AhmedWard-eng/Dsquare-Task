@@ -1,5 +1,6 @@
 package com.example.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        this.startActivity(Intent(this, com.dsquares.library.ui.MainActivity::class.java))
     }
 }
 
