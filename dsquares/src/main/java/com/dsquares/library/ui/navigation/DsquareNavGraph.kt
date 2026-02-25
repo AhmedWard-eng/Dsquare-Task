@@ -38,9 +38,7 @@ fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modif
             LoginScreen(
                 loginState = loginState,
                 onLoginClick = { phone -> viewModel.login(phone) },
-                onCouponsClick = { navController.navigate("coupons"){
-                    popUpTo("login") { inclusive = true }
-                } },
+                onCouponsClick = { navController.navigate("coupons") },
                 onLoginSuccess = {
                     navController.navigate("coupons") {
                         popUpTo("login") { inclusive = true }
