@@ -28,4 +28,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    companion object{
+        const val IS_USER_LOGGED_IN = "IS_USER_LOGGED_IN"
+    }
 }
