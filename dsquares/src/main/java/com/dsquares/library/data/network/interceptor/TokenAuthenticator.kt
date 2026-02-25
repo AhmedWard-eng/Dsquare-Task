@@ -22,12 +22,10 @@ class TokenAuthenticator(
 
         synchronized(this) {
             val currentToken = runBlocking { tokenManager.getAccessToken() }
-            val requestToken = response.request.header("Authorization")
-                ?.removePrefix("Bearer ")?.trim()
             val isTokenExpired = runBlocking { tokenManager.isTokenExpired() }
 
             // Another thread already refreshed — retry with the new token
-            if (!isTokenExpired) {
+            if (!isTokenExpired && currentToken != null) {
                 return response.request.newBuilder()
                     .header("Authorization", "Bearer $currentToken")
                     .header("Authorization-Retry", "true")
