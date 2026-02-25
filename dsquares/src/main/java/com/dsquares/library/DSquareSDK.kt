@@ -1,5 +1,6 @@
 package com.dsquares.library
 
+import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_FIRST_USER
 import android.app.Activity.RESULT_OK
@@ -265,6 +266,19 @@ class DSquareSDK {
             if (!checkInitialized()) return
             launcher.launch(Intent(activity, MainActivity::class.java))
         }
+
+
+        /**
+         * Launches the coupons screen in a fire-and-forget manner.
+         *
+         * @param activity the [Activity] used to build the launch [Intent].
+         */
+        @JvmStatic
+        fun launchCoupons(activity: Activity) {
+            if (!checkInitialized()) return
+            activity.startActivity(Intent(activity, MainActivity::class.java))
+        }
+
 
         @VisibleForTesting
         internal fun resetForTesting(loginUseCase: LoginUseCase? = null) {
