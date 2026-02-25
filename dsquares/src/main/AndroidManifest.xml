@@ -6,7 +6,7 @@
     <application
         android:supportsRtl="true">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.DSquareActivity"
             android:exported="false" />
     </application>
 

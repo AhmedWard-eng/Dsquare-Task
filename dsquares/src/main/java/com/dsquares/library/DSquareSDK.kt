@@ -20,7 +20,7 @@ import com.dsquares.library.di.ServiceLocator
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
 import com.dsquares.library.domain.usecase.LoginUseCase
-import com.dsquares.library.ui.MainActivity
+import com.dsquares.library.ui.DSquareActivity
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -180,7 +180,7 @@ class DSquareSDK {
                     }
                 }
             LaunchedEffect(Unit) {
-                launcher.launch(Intent(context, MainActivity::class.java))
+                launcher.launch(Intent(context, DSquareActivity::class.java))
             }
         }
 
@@ -264,7 +264,7 @@ class DSquareSDK {
         @JvmStatic
         fun launchCoupons(activity: ComponentActivity, launcher: ActivityResultLauncher<Intent>) {
             if (!checkInitialized()) return
-            launcher.launch(Intent(activity, MainActivity::class.java))
+            launcher.launch(Intent(activity, DSquareActivity::class.java))
         }
 
 
@@ -276,7 +276,7 @@ class DSquareSDK {
         @JvmStatic
         fun launchCoupons(activity: Activity) {
             if (!checkInitialized()) return
-            activity.startActivity(Intent(activity, MainActivity::class.java))
+            activity.startActivity(Intent(activity, DSquareActivity::class.java))
         }
 
 

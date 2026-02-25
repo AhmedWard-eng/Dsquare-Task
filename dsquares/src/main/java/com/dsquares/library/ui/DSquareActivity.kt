@@ -12,7 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.dsquares.library.ui.navigation.DsquareNavGraph
 import com.dsquares.library.ui.theme.DsquareTaskTheme
 
-class MainActivity : ComponentActivity() {
+class DSquareActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -27,9 +27,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    companion object{
-        const val IS_USER_LOGGED_IN = "IS_USER_LOGGED_IN"
     }
 }
