@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dsquares.library.CouponsResult
 import com.dsquares.library.DSquareSDK
-import com.dsquares.library.DSquareSDK.Companion.registerCouponsLauncher
+import com.dsquares.library.DSquareSDK.Companion.rememberLauncherForDSquareSDK
 import com.dsquares.library.LoginResult
 import com.example.app.ui.XMLActivity
 import com.example.app.ui.theme.DsquareTaskTheme
@@ -34,35 +34,33 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private var couponsLauncher: ActivityResultLauncher<Intent>? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        couponsLauncher =
-            registerCouponsLauncher { result ->
-                when (result) {
-                    is CouponsResult.Success ->
-                        Toast.makeText(
-                            this@MainActivity, "Coupons success: ${result.data}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-
-                    is CouponsResult.Canceled -> Toast.makeText(
-                        this@MainActivity, "Coupons canceled",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    is CouponsResult.Failure -> Toast.makeText(
-                        this@MainActivity, "Coupons failure: ${result.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-
 
         setContent {
             DsquareTaskTheme {
+                val couponsLauncher = rememberLauncherForDSquareSDK{ result->
+                    when (result) {
+                        is CouponsResult.Success ->
+                            Toast.makeText(
+                                this@MainActivity, "Coupons success: ${result.data}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                        is CouponsResult.Canceled -> Toast.makeText(
+                            this@MainActivity, "Coupons canceled",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        is CouponsResult.Failure -> Toast.makeText(
+                            this@MainActivity, "Coupons failure: ${result.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     DSquareScreen(
                         modifier = Modifier.padding(innerPadding),
@@ -81,9 +79,8 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         onShowCouponsClick = {
-                            val launcher = couponsLauncher
-                            if (launcher != null) {
-                                DSquareSDK.launchCoupons(this, launcher)
+                            if (couponsLauncher != null) {
+                                DSquareSDK.launchCoupons(this, couponsLauncher)
                             }
                         },
                         onGoToTheXML = {
