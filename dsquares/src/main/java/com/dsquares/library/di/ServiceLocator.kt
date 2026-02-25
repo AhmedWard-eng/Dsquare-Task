@@ -6,8 +6,6 @@ import com.dsquares.library.BuildConfig
 import com.dsquares.library.security.CryptoManager
 import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.data.local.tokenDataStore
-import com.dsquares.library.data.network.IRemoteSource
-import com.dsquares.library.data.network.RemoteSource
 import com.dsquares.library.data.network.api.ApiService
 import com.dsquares.library.data.network.interceptor.AuthInterceptor
 import com.dsquares.library.data.network.interceptor.ConnectivityInterceptor
@@ -21,6 +19,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ServiceLocator {
 
     private const val BASE_URL: String = "https://connect-api.dsquares.com/"
+    internal const val TAG : String = "DSQUARE-SDK"
 
     var appContext: Context? = null
     var apiKey: String = ""

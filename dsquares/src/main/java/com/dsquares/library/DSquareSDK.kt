@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import com.dsquares.library.di.ServiceLocator
+import com.dsquares.library.di.ServiceLocator.TAG
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
 import com.dsquares.library.domain.usecase.LoginUseCase
@@ -52,7 +53,6 @@ class DSquareSDK {
     }
 
     companion object {
-        private const val TAG = "DSquareSDK"
         private val dSquareSDK = DSquareSDK()
 
         @Volatile

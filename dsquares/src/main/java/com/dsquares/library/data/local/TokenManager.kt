@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.dsquares.library.di.ServiceLocator.TAG
 import com.dsquares.library.security.CryptoManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,6 @@ class TokenManager(
 ) {
 
     companion object {
-        private const val TAG = "DSquareSDK:TokenManager"
         private const val DATASTORE_NOT_AVAILABLE =
             "DataStore is not available. Ensure DSquareSDK.init(context) is called with a valid Context before using the SDK."
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
