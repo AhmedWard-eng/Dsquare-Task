@@ -1,6 +1,5 @@
 package com.dsquares.library.data.repo
 
-import android.util.Log
 import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.RemoteSource
@@ -51,7 +50,7 @@ class LoginRepo(
         } catch (e: IOException) {
             Result.Failure(DomainException.NetworkException(e))
         } catch (e: HttpException) {
-            Result.Failure(DomainException.NetworkException(e))
+            Result.Failure(DomainException.HttpException(e.extractErrorMessage()))
         } catch (e: Exception) {
             Result.Failure(DomainException.UnknownException(e))
         }

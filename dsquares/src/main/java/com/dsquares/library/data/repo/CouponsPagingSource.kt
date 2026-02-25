@@ -51,7 +51,7 @@ class CouponsPagingSource(
         } catch (e: IOException) {
             LoadResult.Error(DomainException.NetworkException(e))
         } catch (e: HttpException) {
-            LoadResult.Error(DomainException.NetworkException(e))
+            LoadResult.Error(DomainException.HttpException(e.extractErrorMessage()))
         } catch (e: Exception){
             LoadResult.Error(DomainException.UnknownException(e))
         }
