@@ -227,50 +227,7 @@ DSquareSDK.launchCoupons(activity)
 
 ---
 
-## Integration into a New Host Application
 
-### Step 1 — Add the SDK module
-
-Copy the `dsquares/` directory into your project root, then include it in `settings.gradle.kts`:
-
-```kotlin
-include(":dsquares")
-```
-
-### Step 2 — Add the dependency
-
-In your app module's `build.gradle.kts`:
-
-```kotlin
-dependencies {
-    implementation(project(":dsquares"))
-}
-```
-
-### Step 3 — Initialize
-
-In your `Application` subclass:
-
-```kotlin
-DSquareSDK.init(this, apiKey = "YOUR_API_KEY")
-```
-
-### Step 4 — Use the API
-
-Call `logIn` / `logout` / `showCoupons` as shown in the [SDK Public Interface](#sdk-public-interface) section above.
-
-### Permissions
-
-The SDK declares the following permissions in its own manifest (merged automatically):
-
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-```
-
-No runtime permissions are required.
-
----
 
 ## Project Structure
 
@@ -300,6 +257,22 @@ DsquareTask/
 ├── settings.gradle.kts           # Module includes
 └── README.md
 ```
+
+---
+
+## Notes on Mock vs. Live Implementation
+
+The **debug** build variant uses a `MockRemoteSource` (located in `dsquares/src/debug/`) instead of hitting the live API. This was done intentionally to allow offline development and reliable UI testing without depending on server availability.
+
+### What the mock provides
+- 39 coupon items (13 brands x 3 tiers) with English and Arabic locale support
+- Simulated network delays (2 s for page 1, 8 s for subsequent pages)
+- A simulated server error on the first load of page 3, to exercise error/retry UI
+- Search filtering on the mock dataset
+
+### What changes when connecting to the live API
+- `CouponsRepo` currently defaults to `MockRemoteSource()` in its constructor. Switching to the production `RemoteSource` (backed by Retrofit + OkHttp) is a single constructor change — all downstream code (paging, mapping, error handling) remains the same.
+- The full authentication flow (login, token storage, token refresh via `TokenAuthenticator`) is already production-ready and works against the live API.
 
 ---
 
