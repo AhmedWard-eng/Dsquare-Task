@@ -10,5 +10,11 @@
     <string name="points_label">points</string>
     <string name="discount_percent">%1$s%% off</string>
     <string name="locked">Locked</string>
+    <string name="no_internet">No internet connection</string>
+    <string name="something_went_wrong">Something went wrong</string>
     <string name="upgrade_to_next_package">Upgrade to the next package 🌟✨</string>
+    <string name="no_coupons_found">No coupons found</string>
+    <string name="retry">Retry</string>
+    <string name="invalid_phone_number">Please enter a valid phone number consisting of 11 digits starting with 010, 011, 012, or 015</string>
+    <string name="login_failed">Login failed</string>
 </resources>

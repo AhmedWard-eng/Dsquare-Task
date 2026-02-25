@@ -10,5 +10,11 @@
     <string name="points_label">نقطة</string>
     <string name="discount_percent">خصم %1$s%%</string>
     <string name="locked">مقفل</string>
+    <string name="no_internet">لا يوجد اتصال بالإنترنت</string>
+    <string name="something_went_wrong">حدث خطأ ما</string>
     <string name="upgrade_to_next_package">الترقية إلى الحزمة التالية 🌟✨</string>
+    <string name="no_coupons_found">لا توجد قسائم</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="invalid_phone_number">من فضلك أدخل رقم هاتف صحيح مكون من ١١ رقم يبدأ بـ 010 أو 011 أو 012 أو 015</string>
+    <string name="login_failed">فشل تسجيل الدخول</string>
 </resources>
