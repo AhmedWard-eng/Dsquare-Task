@@ -1,4 +1,4 @@
-package com.dsquares.library.ui.models
+package com.dsquares.library.ui.models.coupons
 
 data class CouponUiModel(
     val code: String,

@@ -1,4 +1,4 @@
-package com.dsquares.library.ui.components
+package com.dsquares.library.ui.components.coupons
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,7 +32,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.dsquares.library.R
-import com.dsquares.library.ui.models.CouponUiModel
+import com.dsquares.library.ui.models.coupons.CouponUiModel
 
 private const val OVERLAY_BADGE_ALPHA = 0.22f
 private const val OVERLAY_LOCK_ALPHA = 0.35f

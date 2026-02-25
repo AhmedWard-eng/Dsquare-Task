@@ -1,4 +1,4 @@
-package com.dsquares.library.ui.components
+package com.dsquares.library.ui.components.coupons
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,13 +15,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.dsquares.library.R
-import com.dsquares.library.ui.models.CategoryUiModel
 
 @Composable
 fun CategoryChipRow(
-    categories: List<CategoryUiModel>,
-    selectedCategory: CategoryUiModel?,
-    onCategorySelected: (CategoryUiModel?) -> Unit,
+    categories: List<String>,
+    selectedCategory: String?,
+    onCategorySelected: (String?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyRow(
@@ -38,7 +37,7 @@ fun CategoryChipRow(
         }
         items(categories) { category ->
             CategoryChip(
-                text = category.name,
+                text = category,
                 isSelected = selectedCategory == category,
                 onClick = { onCategorySelected(category) }
             )
