@@ -9,12 +9,16 @@ import android.content.Intent
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.WorkerThread
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import com.dsquares.library.di.ServiceLocator
 import com.dsquares.library.domain.DomainException
@@ -161,27 +165,79 @@ class DSquareSDK {
          */
         @Composable
         fun ShowCoupons(onResult: (CouponsResult) -> Unit) {
-            if (!checkInitialized()) return
             val context = LocalContext.current
+            val updatedOnResult by rememberUpdatedState(onResult)
             val launcher =
                 rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                     when (result.resultCode) {
                         RESULT_OK -> {
-                            onResult(CouponsResult.Success("Coupon applied successfully"))
+                            updatedOnResult(CouponsResult.Success("Coupon applied successfully"))
                         }
 
                         RESULT_CANCELED -> {
-                            onResult(CouponsResult.Canceled)
+                            updatedOnResult(CouponsResult.Canceled)
                         }
 
                         RESULT_FIRST_USER -> {
-                            onResult(CouponsResult.Failure())
+                            updatedOnResult(CouponsResult.Failure())
                         }
                     }
                 }
+            if (!checkInitialized()) return
             LaunchedEffect(Unit) {
                 launcher.launch(Intent(context, DSquareActivity::class.java))
             }
+        }
+
+        /**
+         * Remembers and returns a [ManagedActivityResultLauncher] that delivers
+         * [CouponsResult] when the coupons flow finishes.
+         *
+         * Use this when you need to control **when** the coupons screen is
+         * launched (e.g. on a button click) rather than launching it
+         * immediately on composition like [ShowCoupons].
+         *
+         * Pass the returned launcher to [launchCoupons] to start the flow:
+         *
+         * ```kotlin
+         * // Inside setContent { }
+         * val launcher = DSquareSDK.rememberLauncherForDSquareSDK { result ->
+         *     // handle CouponsResult
+         * }
+         *
+         * Button(onClick = {
+         *     if (launcher != null) DSquareSDK.launchCoupons(activity, launcher)
+         * }) { Text("Show Coupons") }
+         * ```
+         *
+         * @param onResult callback invoked with a [CouponsResult] when the
+         *                 coupons flow finishes.
+         * @return a [ManagedActivityResultLauncher] to pass to [launchCoupons],
+         *         or `null` if the SDK has not been initialized.
+         */
+        @Composable
+        fun rememberLauncherForDSquareSDK(
+            onResult: (CouponsResult) -> Unit
+        ): ManagedActivityResultLauncher<Intent, ActivityResult>? {
+            val updatedOnResult by rememberUpdatedState(onResult)
+            val launcher =
+                rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                    when (result.resultCode) {
+                        RESULT_OK -> {
+                            updatedOnResult(CouponsResult.Success("Coupon applied successfully"))
+                        }
+
+                        RESULT_CANCELED -> {
+                            updatedOnResult(CouponsResult.Canceled)
+                        }
+
+                        RESULT_FIRST_USER -> {
+                            updatedOnResult(CouponsResult.Failure())
+                        }
+                    }
+                }
+            if (!checkInitialized()) return null
+            return launcher
         }
 
         /**
