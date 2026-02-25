@@ -1,11 +1,9 @@
 package com.dsquares.library
 
-import android.app.Activity
 import android.app.Activity.RESULT_CANCELED
 import android.app.Activity.RESULT_FIRST_USER
 import android.app.Activity.RESULT_OK
 import android.app.Application
-import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.annotation.VisibleForTesting
@@ -17,13 +15,11 @@ import androidx.annotation.WorkerThread
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.lifecycleScope
 import com.dsquares.library.di.ServiceLocator
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
 import com.dsquares.library.domain.usecase.LoginUseCase
 import com.dsquares.library.ui.MainActivity
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -61,7 +57,7 @@ class DSquareSDK {
             get() = _loginUseCase ?: LoginUseCase().also { _loginUseCase = it }
 
         /**
-         * Initialises the SDK. Must be called exactly once, typically in
+         * Initializes the SDK. Must be called exactly once, typically in
          * [Application.onCreate].
          *
          * Subsequent calls are ignored and a warning is logged.
@@ -163,7 +159,7 @@ class DSquareSDK {
          *                 coupons flow finishes.
          */
         @Composable
-        fun showCoupons(onResult: (CouponsResult) -> Unit) {
+        fun ShowCoupons(onResult: (CouponsResult) -> Unit) {
             if (!checkInitialized()) return
             val context = LocalContext.current
             val launcher =
@@ -192,7 +188,7 @@ class DSquareSDK {
          * when the coupons flow finishes.
          *
          * **Must be called during the activity's `CREATED` state** (i.e. in
-         * `onCreate` before `super.onCreate` or in an initialiser block) —
+         * `onCreate` before `super.onCreate` or in an initializer block) —
          * the same rule as [ComponentActivity.registerForActivityResult].
          *
          * Use the returned launcher with [launchCoupons] to start the flow.
@@ -210,7 +206,7 @@ class DSquareSDK {
          * @param onResult callback invoked with a [CouponsResult] when the
          *                 coupons flow finishes.
          * @return an [ActivityResultLauncher] to pass to [launchCoupons],
-         *         or `null` if the SDK has not been initialised.
+         *         or `null` if the SDK has not been initialized.
          */
         @JvmName("registerCouponsLauncherExt")
         fun ComponentActivity.registerCouponsLauncher(
@@ -247,7 +243,7 @@ class DSquareSDK {
          * @param onResult callback invoked with a [CouponsResult] when the
          *                 coupons flow finishes.
          * @return an [ActivityResultLauncher] to pass to [launchCoupons],
-         *         or `null` if the SDK has not been initialised.
+         *         or `null` if the SDK has not been initialized.
          */
         @JvmStatic
         fun registerCouponsLauncher(

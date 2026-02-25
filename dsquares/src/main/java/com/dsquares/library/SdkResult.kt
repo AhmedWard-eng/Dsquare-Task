@@ -34,7 +34,7 @@ sealed class LoginResult {
 
 /**
  * Represents the outcome of the coupons flow launched via
- * [DSquareSDK.showCoupons], [DSquareSDK.registerCouponsLauncher], or [DSquareSDK.launchCoupons].
+ * [DSquareSDK.ShowCoupons], [DSquareSDK.registerCouponsLauncher], or [DSquareSDK.launchCoupons].
  */
 sealed class CouponsResult {
     /**
