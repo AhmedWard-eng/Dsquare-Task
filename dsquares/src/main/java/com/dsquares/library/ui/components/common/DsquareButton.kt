@@ -1,4 +1,4 @@
-package com.dsquares.library.ui.components
+package com.dsquares.library.ui.components.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
