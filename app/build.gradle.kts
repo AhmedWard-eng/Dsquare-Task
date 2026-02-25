@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -7,6 +9,14 @@ android {
     namespace = "com.example.app"
     compileSdk {
         version = release(36)
+    }
+
+    val localProps = Properties()
+    val localPropertiesFile = File(rootProject.rootDir,"local.properties")
+    if (localPropertiesFile.exists() && localPropertiesFile.isFile) {
+        localPropertiesFile.inputStream().use {
+            localProps.load(it)
+        }
     }
 
     defaultConfig {
@@ -27,6 +37,15 @@ android {
                 "proguard-rules.pro"
             )
         }
+
+        debug{
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            buildConfigField("String", "API_KEY", localProps.getProperty("API_KEY"))
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -34,6 +53,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
