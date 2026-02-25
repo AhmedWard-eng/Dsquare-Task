@@ -16,7 +16,6 @@ import com.dsquares.library.ui.screens.coupons.CouponsScreen
 import com.dsquares.library.ui.screens.login.LoginScreen
 import com.dsquares.library.ui.screens.coupons.CouponsViewModel
 import com.dsquares.library.ui.screens.login.LoginViewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -39,7 +38,9 @@ fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modif
             LoginScreen(
                 loginState = loginState,
                 onLoginClick = { phone -> viewModel.login(phone) },
-                onCouponsClick = { navController.navigate("coupons") },
+                onCouponsClick = { navController.navigate("coupons"){
+                    popUpTo("login") { inclusive = true }
+                } },
                 onLoginSuccess = {
                     navController.navigate("coupons") {
                         popUpTo("login") { inclusive = true }
@@ -58,7 +59,13 @@ fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modif
                 categories = emptyList(),
                 searchQuery = searchQuery,
                 onSearchQueryChanged = { viewModel.onSearchQueryChanged(it) },
-                onBackClick = { activity?.finish() }
+                onBackClick = {
+                    if (navController.previousBackStackEntry != null) {
+                        navController.navigateUp()
+                    } else {
+                        activity?.finish()
+                    }
+                }
             )
         }
     }
