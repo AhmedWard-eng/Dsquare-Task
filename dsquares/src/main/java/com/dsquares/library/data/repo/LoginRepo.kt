@@ -1,5 +1,6 @@
 package com.dsquares.library.data.repo
 
+import android.util.Log
 import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.RemoteSource
@@ -8,6 +9,7 @@ import com.dsquares.library.domain.ILoginRepo
 import com.dsquares.library.domain.Result
 import com.dsquares.library.data.network.interceptor.NoConnectivityException
 import com.dsquares.library.di.ServiceLocator
+import com.dsquares.library.di.ServiceLocator.TAG
 import retrofit2.HttpException
 import java.io.IOException
 
@@ -52,6 +54,7 @@ class LoginRepo(
         } catch (e: HttpException) {
             Result.Failure(DomainException.HttpException(e.extractErrorMessage()))
         } catch (e: Exception) {
+            Log.d(TAG, "Failed to fetch items: ${e.message}")
             Result.Failure(DomainException.UnknownException(e))
         }
     }

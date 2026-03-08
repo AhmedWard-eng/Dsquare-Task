@@ -1,10 +1,12 @@
 package com.dsquares.library.data.repo
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.interceptor.NoConnectivityException
 import com.dsquares.library.data.network.model.items.Item
+import com.dsquares.library.di.ServiceLocator.TAG
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.model.DomainCoupon
 import retrofit2.HttpException
@@ -53,6 +55,7 @@ class CouponsPagingSource(
         } catch (e: HttpException) {
             LoadResult.Error(DomainException.HttpException(e.extractErrorMessage()))
         } catch (e: Exception){
+            Log.d(TAG, "Failed to fetch items: ${e.message}")
             LoadResult.Error(DomainException.UnknownException(e))
         }
     }
