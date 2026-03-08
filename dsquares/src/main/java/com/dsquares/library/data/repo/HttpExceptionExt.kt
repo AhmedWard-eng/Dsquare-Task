@@ -12,8 +12,17 @@ fun HttpException.extractErrorMessage(): String {
 
     return try {
         val errorJson = JSONObject(body)
-        errorJson.optString("message").ifEmpty { null }
-            ?: message()
+
+        val errorMessage = errorJson.optString("message").ifEmpty { null }
+            ?: errorJson.optString("errors").ifEmpty { null }
+        val statusName = errorJson.optString("statusName").ifEmpty { null }
+
+        when {
+            statusName != null && errorMessage != null -> "$statusName: $errorMessage"
+            errorMessage != null -> errorMessage
+            else -> message()
+        }
+
     } catch (e: JSONException) {
         Log.d(TAG, "Failed to parse message from error body: ${e.message}")
         message()
