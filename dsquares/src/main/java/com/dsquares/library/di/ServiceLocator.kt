@@ -58,7 +58,7 @@ object ServiceLocator {
                     "OkHttp",
                     message
                 )
-            })
+            }.apply { level = HttpLoggingInterceptor.Level.BODY })
             .authenticator(tokenAuthenticator)
             .build()
     }
