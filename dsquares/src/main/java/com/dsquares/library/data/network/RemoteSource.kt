@@ -1,15 +1,18 @@
 package com.dsquares.library.data.network
 
 import com.dsquares.library.data.network.api.ApiService
+import com.dsquares.library.data.network.model.BaseRequest
 import com.dsquares.library.data.network.model.BaseResponse
 import com.dsquares.library.data.network.model.items.ItemResult
+import com.dsquares.library.data.network.model.items.CouponsRequestData
+import com.dsquares.library.data.network.model.login.LoginRequestData
 import com.dsquares.library.data.network.model.login.LoginResult
 import com.dsquares.library.di.ServiceLocator
 
 class RemoteSource(private val apiService: ApiService = ServiceLocator.apiService) : IRemoteSource {
 
     override suspend fun login(userId: String): BaseResponse<LoginResult> {
-        val body = mapOf("UserIdentifier" to userId)
+        val body = BaseRequest(data = LoginRequestData(userIdentifier = userId))
         return apiService.login(body)
     }
 
@@ -20,6 +23,15 @@ class RemoteSource(private val apiService: ApiService = ServiceLocator.apiServic
         categoryCode: String?,
         rewardTypes: List<String>?
     ): BaseResponse<ItemResult> {
-        return apiService.getItems(page, pageSize, name, categoryCode, rewardTypes)
+        val body = BaseRequest(
+            data = CouponsRequestData(
+                page = page,
+                pageSize = pageSize,
+                name = name,
+                categoryCode = categoryCode.orEmpty(),
+                rewardTypes = rewardTypes ?: listOf("GiftCards", "Discounts")
+            )
+        )
+        return apiService.getItems(body)
     }
 }
