@@ -26,6 +26,8 @@ class TokenAuthenticator(
 
             // Another thread already refreshed — retry with the new token
             if (!isTokenExpired && currentToken != null) {
+                // TODO: Replace hardcoded "Bearer" with result.tokenType once the BE fixes
+                //  the login response to return "Bearer" instead of "JWT"
                 return response.request.newBuilder()
                     .header("Authorization", "Bearer $currentToken")
                     .header("Authorization-Retry", "true")
@@ -51,8 +53,10 @@ class TokenAuthenticator(
                 )
             }
 
+            // TODO: Replace hardcoded "Bearer" with result.tokenType once the BE fixes
+            //  the login response to return "Bearer" instead of "JWT"
             return response.request.newBuilder()
-                .header("Authorization", "${result.tokenType} ${result.accessToken}")
+                .header("Authorization", "Bearer ${result.accessToken}")
                 .header("Authorization-Retry", "true")
                 .build()
         }

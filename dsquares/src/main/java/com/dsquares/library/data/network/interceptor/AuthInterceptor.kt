@@ -15,11 +15,12 @@ class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
         }
 
         val token = runBlocking { tokenManager.getAccessToken() }
-        val tokenType = runBlocking { tokenManager.getTokenType() } ?: "Bearer"
 
         if (token != null) {
+            // TODO: Replace hardcoded "Bearer" with tokenType from TokenManager once the BE fixes
+            //  the login response to return "Bearer" instead of "JWT"
             val authenticatedRequest = request.newBuilder()
-                .header("Authorization", "$tokenType $token")
+                .header("Authorization", "Bearer $token")
                 .build()
             return chain.proceed(authenticatedRequest)
         }
