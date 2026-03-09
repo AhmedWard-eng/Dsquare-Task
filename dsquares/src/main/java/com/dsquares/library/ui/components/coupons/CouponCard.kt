@@ -1,5 +1,6 @@
 package com.dsquares.library.ui.components.coupons
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -31,7 +33,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import com.dsquares.library.BuildConfig
 import com.dsquares.library.R
+import com.dsquares.library.constants.TAG
+import com.dsquares.library.di.AppContainer
 import com.dsquares.library.ui.models.coupons.CouponUiModel
 
 private const val OVERLAY_BADGE_ALPHA = 0.22f
@@ -62,7 +69,20 @@ fun CouponCard(
                     .aspectRatio(1.4f)
             ) {
                 AsyncImage(
-                    model = coupon.imageUrl,
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(coupon.imageUrl)
+                        .crossfade(true)
+                        .listener(
+                            onError = { request, result ->
+                                if (BuildConfig.DEBUG)
+                                Log.e(TAG, "Failed to load: ${coupon.imageUrl}", result.throwable)
+                            },
+                            onSuccess = { request, result ->
+                                if (BuildConfig.DEBUG)
+                                Log.d(TAG, "Loaded: ${coupon.imageUrl}")
+                            }
+                        )
+                        .build(),
                     contentDescription = coupon.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
