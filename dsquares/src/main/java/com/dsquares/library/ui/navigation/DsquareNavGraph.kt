@@ -4,6 +4,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -11,6 +12,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.dsquares.library.DSquareSDK
+import com.dsquares.library.di.CouponsContainer
+import com.dsquares.library.di.LoginContainer
 import com.dsquares.library.domain.usecase.IsUserLoggedInUseCase
 import com.dsquares.library.ui.screens.coupons.CouponsScreen
 import com.dsquares.library.ui.screens.login.LoginScreen
@@ -23,11 +27,12 @@ fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modif
 
     NavHost(navController = navController, startDestination = "login", modifier = modifier) {
         composable("login") {
-            val viewModel: LoginViewModel = viewModel()
+            val container = remember { LoginContainer(DSquareSDK.appContainer) }
+            val viewModel: LoginViewModel = viewModel(factory = container.loginViewModelFactory)
             val loginState by viewModel.loginState.collectAsStateWithLifecycle()
 
             LaunchedEffect(Unit) {
-                val isUserLoggedIn = IsUserLoggedInUseCase()
+                val isUserLoggedIn = IsUserLoggedInUseCase(DSquareSDK.appContainer.tokenManager)
                 if (isUserLoggedIn()) {
                     navController.navigate("coupons") {
                         popUpTo("login") { inclusive = true }
@@ -48,7 +53,8 @@ fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modif
             )
         }
         composable("coupons") {
-            val viewModel: CouponsViewModel = viewModel()
+            val container = remember { CouponsContainer(DSquareSDK.appContainer) }
+            val viewModel: CouponsViewModel = viewModel(factory = container.couponsViewModelFactory)
             val coupons = viewModel.coupons.collectAsLazyPagingItems()
             val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 

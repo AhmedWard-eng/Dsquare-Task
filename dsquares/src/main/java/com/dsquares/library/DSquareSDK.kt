@@ -20,11 +20,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
-import com.dsquares.library.di.ServiceLocator
-import com.dsquares.library.di.ServiceLocator.TAG
+import com.dsquares.library.data.repo.LoginRepo
+import com.dsquares.library.di.AppContainer
+import com.dsquares.library.constants.TAG
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
 import com.dsquares.library.domain.usecase.LoginUseCase
+import com.dsquares.library.domain.usecase.ValidatePhoneUseCase
 import com.dsquares.library.ui.DSquareActivity
 import kotlinx.coroutines.runBlocking
 
@@ -47,19 +49,21 @@ import kotlinx.coroutines.runBlocking
  */
 class DSquareSDK {
 
-    private fun configure(application: Application, apiKey: String) {
-        ServiceLocator.appContext = application.applicationContext
-        ServiceLocator.apiKey = apiKey
-    }
-
     companion object {
-        private val dSquareSDK = DSquareSDK()
 
         @Volatile
-        private var initialized = false
+        private var _appContainer: AppContainer? = null
+
+        internal val appContainer: AppContainer
+            get() = _appContainer
+                ?: throw IllegalStateException("DSquareSDK.init() must be called before using the SDK")
+
         private var _loginUseCase: LoginUseCase? = null
         private val loginUseCase: LoginUseCase
-            get() = _loginUseCase ?: LoginUseCase().also { _loginUseCase = it }
+            get() = _loginUseCase ?: LoginUseCase(
+                loginRepo = LoginRepo(appContainer.remoteSource, appContainer.tokenManager),
+                validatePhoneUseCase = ValidatePhoneUseCase()
+            ).also { _loginUseCase = it }
 
         /**
          * Initializes the SDK. Must be called exactly once, typically in
@@ -72,7 +76,7 @@ class DSquareSDK {
          */
         @JvmStatic
         fun init(application: Application, apiKey: String) {
-            if (initialized) {
+            if (_appContainer != null) {
                 Log.w(TAG, "DSquareSDK is already initialized")
                 return
             }
@@ -80,12 +84,11 @@ class DSquareSDK {
                 Log.e(TAG, "API key must not be blank")
                 return
             }
-            dSquareSDK.configure(application, apiKey)
-            initialized = true
+            _appContainer = AppContainer(application.applicationContext, apiKey)
         }
 
-        private fun checkInitialized(): Boolean {
-            if (!initialized) {
+        internal fun checkInitialized(): Boolean {
+            if (_appContainer == null) {
                 Log.e(TAG, "DSquareSDK.init() must be called before using the SDK")
                 return false
             }
@@ -139,7 +142,7 @@ class DSquareSDK {
          */
         suspend fun logout(): Boolean {
             if (!checkInitialized()) return false
-            return ServiceLocator.tokenManager.clearToken()
+            return appContainer.tokenManager.clearToken()
         }
 
         /**
@@ -337,8 +340,11 @@ class DSquareSDK {
 
 
         @VisibleForTesting
-        internal fun resetForTesting(loginUseCase: LoginUseCase? = null) {
-            initialized = false
+        internal fun resetForTesting(
+            loginUseCase: LoginUseCase? = null,
+            appContainer: AppContainer? = null
+        ) {
+            _appContainer = appContainer
             _loginUseCase = loginUseCase
         }
 

@@ -2,7 +2,6 @@ package com.dsquares.library.data.network.interceptor
 
 import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.data.network.IRemoteSource
-import com.dsquares.library.data.network.RemoteSource
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -11,7 +10,7 @@ import okhttp3.Route
 
 class TokenAuthenticator(
     private val tokenManager: TokenManager,
-    private val remoteSourceProvider: () -> IRemoteSource = { RemoteSource() }
+    private val remoteSourceProvider: () -> IRemoteSource
 ) : Authenticator {
 
     private val remoteSource by lazy { remoteSourceProvider() }

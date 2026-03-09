@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
-class CouponsViewModel(private val getCouponsUseCase: GetCouponsUseCase = GetCouponsUseCase()) : ViewModel() {
+class CouponsViewModel(private val getCouponsUseCase: GetCouponsUseCase) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()

@@ -3,7 +3,7 @@ package com.dsquares.library
 import android.app.Application
 import android.util.Log
 import com.dsquares.library.data.local.TokenManager
-import com.dsquares.library.di.ServiceLocator
+import com.dsquares.library.di.AppContainer
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
 import com.dsquares.library.domain.usecase.LoginUseCase
@@ -11,7 +11,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -35,10 +34,12 @@ class DSquareSDKTest {
         every { Log.e(any(), any()) } returns 0
         every { Log.w(any(), any<String>()) } returns 0
 
-        mockkObject(ServiceLocator)
-        every { ServiceLocator.tokenManager } returns mockTokenManager
-
-        DSquareSDK.resetForTesting(mockLoginUseCase)
+        DSquareSDK.resetForTesting(
+            loginUseCase = mockLoginUseCase,
+            appContainer = mockk<AppContainer>(relaxed = true) {
+                every { tokenManager } returns mockTokenManager
+            }
+        )
     }
 
     @After
@@ -62,28 +63,32 @@ class DSquareSDKTest {
 
     @Test
     fun `given blank apiKey, when init is called, then SDK remains uninitialized`() = runTest {
+        // Reset to uninitialized state for this test
+        DSquareSDK.resetForTesting()
+
         DSquareSDK.init(mockApplication, apiKey = "   ")
 
         val result = DSquareSDK.logIn("01234567890")
 
         assertEquals(LoginResult.Error(ErrorCode.UNKNOWN, "SDK not initialized"), result)
-        verify(exactly = 0) { ServiceLocator.apiKey = any() }
         coVerify(exactly = 0) { mockLoginUseCase.invoke(any()) }
     }
 
     @Test
     fun `given SDK already initialized, when init is called again, then second call is ignored`() {
-        DSquareSDK.init(mockApplication, apiKey = "key-1")
+        // Already initialized via setup(), calling init again should be ignored
         DSquareSDK.init(mockApplication, apiKey = "key-2")
 
-        verify(exactly = 1) { ServiceLocator.apiKey = any() }
-        verify { ServiceLocator.apiKey = "key-1" }
+        // Verify the warning was logged (second call ignored)
+        verify { Log.w(any(), eq("DSquareSDK is already initialized")) }
     }
 
     // ── logIn() ─────────────────────────────────────────────────────────
 
     @Test
     fun `given SDK not initialized, when logIn is called, then returns Error UNKNOWN and LoginUseCase is never called`() = runTest {
+        DSquareSDK.resetForTesting()
+
         val result = DSquareSDK.logIn("01234567890")
 
         assertEquals(LoginResult.Error(ErrorCode.UNKNOWN, "SDK not initialized"), result)
@@ -165,6 +170,8 @@ class DSquareSDKTest {
 
     @Test
     fun `given SDK not initialized, when logout is called, then returns false and TokenManager is never called`() = runTest {
+        DSquareSDK.resetForTesting()
+
         val result = DSquareSDK.logout()
 
         assertFalse(result)
@@ -175,6 +182,8 @@ class DSquareSDKTest {
 
     @Test
     fun `given SDK not initialized, when logInBlocking is called, then returns Error UNKNOWN and LoginUseCase is never called`() {
+        DSquareSDK.resetForTesting()
+
         val result = DSquareSDK.logInBlocking("01234567890")
 
         assertEquals(LoginResult.Error(ErrorCode.UNKNOWN, "SDK not initialized"), result)
@@ -183,6 +192,8 @@ class DSquareSDKTest {
 
     @Test
     fun `given SDK not initialized, when logoutBlocking is called, then returns false and TokenManager is never called`() {
+        DSquareSDK.resetForTesting()
+
         val result = DSquareSDK.logoutBlocking()
 
         assertFalse(result)

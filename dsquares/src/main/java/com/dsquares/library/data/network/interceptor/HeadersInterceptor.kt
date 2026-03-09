@@ -1,15 +1,12 @@
 package com.dsquares.library.data.network.interceptor
 
-import com.dsquares.library.di.ServiceLocator
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.util.Locale
 
 class HeadersInterceptor(
     private val apiKey: String,
-    private val localeProvider: () -> Locale = {
-        ServiceLocator.appContext?.resources?.configuration?.locales?.get(0) ?: Locale.getDefault()
-    }
+    private val localeProvider: () -> Locale
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {

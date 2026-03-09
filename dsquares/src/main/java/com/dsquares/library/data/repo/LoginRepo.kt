@@ -3,19 +3,17 @@ package com.dsquares.library.data.repo
 import android.util.Log
 import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.data.network.IRemoteSource
-import com.dsquares.library.data.network.RemoteSource
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.ILoginRepo
 import com.dsquares.library.domain.Result
 import com.dsquares.library.data.network.interceptor.NoConnectivityException
-import com.dsquares.library.di.ServiceLocator
-import com.dsquares.library.di.ServiceLocator.TAG
+import com.dsquares.library.constants.TAG
 import retrofit2.HttpException
 import java.io.IOException
 
 class LoginRepo(
-    private val remoteSource: IRemoteSource = RemoteSource(),
-    private val tokenManager: TokenManager = ServiceLocator.tokenManager
+    private val remoteSource: IRemoteSource,
+    private val tokenManager: TokenManager
 ) : ILoginRepo {
 
     override suspend fun login(userId: String): Result<Unit> {

@@ -6,7 +6,7 @@ import androidx.paging.PagingState
 import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.interceptor.NoConnectivityException
 import com.dsquares.library.data.network.model.items.Item
-import com.dsquares.library.di.ServiceLocator.TAG
+import com.dsquares.library.constants.TAG
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.model.DomainCoupon
 import retrofit2.HttpException

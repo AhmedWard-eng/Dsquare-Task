@@ -1,7 +1,7 @@
 package com.dsquares.library.data.repo
 
 import android.util.Log
-import com.dsquares.library.di.ServiceLocator.TAG
+import com.dsquares.library.constants.TAG
 import org.json.JSONException
 import org.json.JSONObject
 import retrofit2.HttpException

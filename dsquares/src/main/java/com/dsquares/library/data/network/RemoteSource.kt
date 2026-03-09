@@ -7,9 +7,7 @@ import com.dsquares.library.data.network.model.items.ItemResult
 import com.dsquares.library.data.network.model.items.CouponsRequestData
 import com.dsquares.library.data.network.model.login.LoginRequestData
 import com.dsquares.library.data.network.model.login.LoginResult
-import com.dsquares.library.di.ServiceLocator
-
-class RemoteSource(private val apiService: ApiService = ServiceLocator.apiService) : IRemoteSource {
+class RemoteSource(private val apiService: ApiService) : IRemoteSource {
 
     override suspend fun login(userId: String): BaseResponse<LoginResult> {
         val body = BaseRequest(data = LoginRequestData(userIdentifier = userId))

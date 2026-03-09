@@ -2,10 +2,12 @@ package com.dsquares.library.di
 
 import android.content.Context
 import android.util.Log
+import androidx.datastore.preferences.preferencesDataStore
 import com.dsquares.library.BuildConfig
 import com.dsquares.library.security.CryptoManager
 import com.dsquares.library.data.local.TokenManager
-import com.dsquares.library.data.local.tokenDataStore
+import com.dsquares.library.data.network.RemoteSource
+import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.api.ApiService
 import com.dsquares.library.data.network.interceptor.AuthInterceptor
 import com.dsquares.library.data.network.interceptor.ConnectivityInterceptor
@@ -16,20 +18,14 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object ServiceLocator {
+internal class AppContainer(
+    private val appContext: Context,
+    private val apiKey: String
+) {
+    val cryptoManager: CryptoManager by lazy { CryptoManager() }
 
-    private const val BASE_URL: String = "https://connect-api.dsquares.com/"
-    internal const val TAG : String = "DSQUARE-SDK"
-
-    var appContext: Context? = null
-    var apiKey: String = ""
-
-    val cryptoManager: CryptoManager by lazy {
-        CryptoManager()
-    }
-
-    internal val tokenManager: TokenManager by lazy {
-        TokenManager(appContext?.tokenDataStore, cryptoManager)
+    val tokenManager: TokenManager by lazy {
+        TokenManager(appContext.tokenDataStore, cryptoManager)
     }
 
     private val authInterceptor: AuthInterceptor by lazy {
@@ -37,7 +33,7 @@ object ServiceLocator {
     }
 
     private val tokenAuthenticator: TokenAuthenticator by lazy {
-        TokenAuthenticator(tokenManager)
+        TokenAuthenticator(tokenManager) { remoteSource }
     }
 
     private val connectivityInterceptor: ConnectivityInterceptor by lazy {
@@ -45,7 +41,10 @@ object ServiceLocator {
     }
 
     private val headersInterceptor: HeadersInterceptor by lazy {
-        HeadersInterceptor(apiKey)
+        HeadersInterceptor(apiKey) {
+            appContext.resources?.configuration?.locales?.get(0)
+                ?: java.util.Locale.getDefault()
+        }
     }
 
     private val okHttpClient: OkHttpClient by lazy {
@@ -54,10 +53,7 @@ object ServiceLocator {
             .addInterceptor(headersInterceptor)
             .addInterceptor(authInterceptor)
             .addInterceptor(HttpLoggingInterceptor { message ->
-                if (BuildConfig.DEBUG) Log.d(
-                    "OkHttp",
-                    message
-                )
+                if (BuildConfig.DEBUG) Log.d("OkHttp", message)
             }.apply { level = HttpLoggingInterceptor.Level.BODY })
             .authenticator(tokenAuthenticator)
             .build()
@@ -73,5 +69,14 @@ object ServiceLocator {
 
     val apiService: ApiService by lazy {
         retrofit.create(ApiService::class.java)
+    }
+
+    val remoteSource: IRemoteSource by lazy {
+        RemoteSource(apiService)
+    }
+    val Context.tokenDataStore by preferencesDataStore(name = "dsquare_tokens")
+
+    companion object {
+        private const val BASE_URL = "https://connect-api.dsquares.com/"
     }
 }
