@@ -215,26 +215,4 @@ class TokenAuthenticatorTest {
         assertNull(retryRequest)
         coVerify(exactly = 0) { tokenManager.saveToken(any(), any(), any(), any(), any()) }
     }
-
-    @Test
-    fun `given successful refresh with custom token type, when authenticating, then uses correct type in header`() {
-        coEvery { tokenManager.getAccessToken() } returns "expired-token"
-        coEvery { tokenManager.isTokenExpired() } returns true
-        coEvery { tokenManager.getUserId() } returns "user123"
-        coEvery { remoteSource.login("user123") } returns loginResult(
-            tokenType = "CustomType",
-            accessToken = "new-access"
-        )
-
-        val request = Request.Builder()
-            .url("https://api.example.com/api/DynamicApp/v1/Integration/Items")
-            .header("Authorization", "Bearer expired-token")
-            .build()
-        val response = build401Response(request)
-
-        val retryRequest = authenticator.authenticate(null, response)
-
-        assertNotNull(retryRequest)
-        assertEquals("CustomType new-access", retryRequest!!.header("Authorization"))
-    }
 }

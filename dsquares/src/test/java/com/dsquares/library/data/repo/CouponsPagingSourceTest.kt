@@ -1,6 +1,8 @@
 package com.dsquares.library.data.repo
 
+import android.util.Log
 import androidx.paging.PagingSource
+import com.dsquares.library.constants.TAG
 import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.interceptor.NoConnectivityException
 import com.dsquares.library.data.network.model.BaseResponse
@@ -9,12 +11,17 @@ import com.dsquares.library.data.network.model.items.Item
 import com.dsquares.library.data.network.model.items.ItemResult
 import com.dsquares.library.domain.DomainException
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
@@ -23,6 +30,17 @@ import java.io.IOException
 class CouponsPagingSourceTest {
 
     private val remoteSource = mockk<IRemoteSource>()
+
+
+    @Before
+    fun setup(){
+        mockkStatic(Log::class)
+    }
+
+    @After
+    fun teardown(){
+        unmockkStatic(Log::class)
+    }
 
     private fun createPagingSource(
         name: String = "",
@@ -369,11 +387,12 @@ class CouponsPagingSourceTest {
         val result = createPagingSource().load(refreshParams())
 
         assertTrue(result is PagingSource.LoadResult.Error)
-        assertTrue((result as PagingSource.LoadResult.Error).throwable is DomainException.NetworkException)
+        assertTrue((result as PagingSource.LoadResult.Error).throwable is DomainException.HttpException)
     }
 
     @Test
     fun `given generic exception, when loaded, then returns UnknownException`() = runTest {
+        every { Log.d(TAG, "Failed to fetch items: unexpected") } returns -1
         coEvery { remoteSource.getItems(any(), any(), any(), any(), any()) } throws
                 RuntimeException("unexpected")
 

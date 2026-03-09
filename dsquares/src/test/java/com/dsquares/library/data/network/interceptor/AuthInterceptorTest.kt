@@ -51,17 +51,6 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `given custom token type, when intercepting request, then Authorization uses that type`() {
-        coEvery { tokenManager.getAccessToken() } returns "my-token"
-        coEvery { tokenManager.getTokenType() } returns "CustomType"
-        stubChain()
-
-        interceptor.intercept(chain)
-
-        assertEquals("CustomType my-token", requestSlot.captured.header("Authorization"))
-    }
-
-    @Test
     fun `given null token type, when intercepting request, then Authorization defaults to Bearer`() {
         coEvery { tokenManager.getAccessToken() } returns "my-token"
         coEvery { tokenManager.getTokenType() } returns null

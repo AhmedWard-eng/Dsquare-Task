@@ -1,12 +1,16 @@
 package com.dsquares.library.data.network
 
 import com.dsquares.library.data.network.api.ApiService
+import com.dsquares.library.data.network.model.BaseRequest
 import com.dsquares.library.data.network.model.BaseResponse
+import com.dsquares.library.data.network.model.items.CouponsRequestData
 import com.dsquares.library.data.network.model.items.ItemResult
+import com.dsquares.library.data.network.model.login.LoginRequestData
 import com.dsquares.library.data.network.model.login.LoginResult
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -39,7 +43,9 @@ class RemoteSourceTest {
         val result = remoteSource.login("user-42")
 
         assertEquals(expected, result)
-        coVerify { apiService.login(mapOf("UserIdentifier" to "user-42")) }
+        val loginSlot = slot<BaseRequest<LoginRequestData>>()
+        coVerify { apiService.login(capture(loginSlot)) }
+        assertEquals("user-42", loginSlot.captured.data?.userIdentifier)
     }
 
     @Test
@@ -63,7 +69,8 @@ class RemoteSourceTest {
             statusCode = 200,
             statusName = "OK"
         )
-        coEvery { apiService.getItems(any(), any(), any(), any(), any()) } returns expected
+        val bodySlot = slot<BaseRequest<CouponsRequestData>>()
+        coEvery { apiService.getItems(capture(bodySlot)) } returns expected
 
         val result = remoteSource.getItems(
             page = 1,
@@ -74,19 +81,16 @@ class RemoteSourceTest {
         )
 
         assertEquals(expected, result)
-        coVerify {
-            apiService.getItems(
-                page = 1,
-                pageSize = 10,
-                name = "coffee",
-                categoryCode = "CAT-1",
-                rewardTypes = listOf("COUPON", "VOUCHER")
-            )
-        }
+        val capturedData = bodySlot.captured.data!!
+        assertEquals(1, capturedData.page)
+        assertEquals(10, capturedData.pageSize)
+        assertEquals("coffee", capturedData.name)
+        assertEquals("CAT-1", capturedData.categoryCode)
+        assertEquals(listOf("COUPON", "VOUCHER"), capturedData.rewardTypes)
     }
 
     @Test
-    fun `given null optional parameters, when getItems is called, then passes nulls to apiService`() = runTest {
+    fun `given null optional parameters, when getItems is called, then uses defaults`() = runTest {
         val expected = BaseResponse(
             errors = null,
             message = null,
@@ -95,7 +99,8 @@ class RemoteSourceTest {
             statusCode = 200,
             statusName = "OK"
         )
-        coEvery { apiService.getItems(any(), any(), any(), any(), any()) } returns expected
+        val bodySlot = slot<BaseRequest<CouponsRequestData>>()
+        coEvery { apiService.getItems(capture(bodySlot)) } returns expected
 
         val result = remoteSource.getItems(
             page = 2,
@@ -106,20 +111,17 @@ class RemoteSourceTest {
         )
 
         assertEquals(expected, result)
-        coVerify {
-            apiService.getItems(
-                page = 2,
-                pageSize = 20,
-                name = "",
-                categoryCode = null,
-                rewardTypes = null
-            )
-        }
+        val capturedData = bodySlot.captured.data!!
+        assertEquals(2, capturedData.page)
+        assertEquals(20, capturedData.pageSize)
+        assertEquals("", capturedData.name)
+        assertEquals("", capturedData.categoryCode)
+        assertEquals(listOf("GiftCards", "Discounts"), capturedData.rewardTypes)
     }
 
     @Test
     fun `given apiService throws, when getItems is called, then exception is propagated`() = runTest {
-        coEvery { apiService.getItems(any(), any(), any(), any(), any()) } throws RuntimeException("timeout")
+        coEvery { apiService.getItems(any()) } throws RuntimeException("timeout")
 
         val exception = runCatching {
             remoteSource.getItems(1, 10, "", null, null)

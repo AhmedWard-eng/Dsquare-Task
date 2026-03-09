@@ -1,5 +1,7 @@
 package com.dsquares.library.data.repo
 
+import android.util.Log
+import com.dsquares.library.constants.TAG
 import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.data.network.IRemoteSource
 import com.dsquares.library.data.network.interceptor.NoConnectivityException
@@ -9,8 +11,12 @@ import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -26,6 +32,12 @@ class LoginRepoTest {
     @Before
     fun setup() {
         loginRepo = LoginRepo(remoteSource, tokenManager)
+        mockkStatic(Log::class)
+    }
+
+    @After
+    fun teardown(){
+        unmockkStatic(Log::class)
     }
 
     private fun successResponse(
@@ -205,6 +217,7 @@ class LoginRepoTest {
 
     @Test
     fun `given generic exception, when login is called, then UnknownException returned`() = runTest {
+        every { Log.d(TAG,"Failed to fetch items: unexpected") } returns -1
         coEvery { remoteSource.login("user-1") } throws RuntimeException("unexpected")
 
         val result = loginRepo.login("user-1")
