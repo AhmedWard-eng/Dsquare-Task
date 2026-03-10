@@ -25,8 +25,7 @@ import com.dsquares.library.di.AppContainer
 import com.dsquares.library.constants.TAG
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
-import com.dsquares.library.domain.usecase.LoginUseCase
-import com.dsquares.library.domain.usecase.ValidatePhoneUseCase
+import com.dsquares.library.domain.usecase.LoginByUuidUseCase
 import com.dsquares.library.ui.DSquareActivity
 import kotlinx.coroutines.runBlocking
 
@@ -41,10 +40,10 @@ import kotlinx.coroutines.runBlocking
  * DSquareSDK.init(this, apiKey = "your-api-key")
  *
  * // Kotlin coroutine
- * val result = DSquareSDK.logIn("+20123456789")
+ * val result = DSquareSDK.logIn("b44f01bd-8836-4668-a369-fe67583545d2")
  *
  * // Java / blocking
- * LoginResult result = DSquareSDK.logInBlocking("+20123456789");
+ * LoginResult result = DSquareSDK.logInBlocking("b44f01bd-8836-4668-a369-fe67583545d2");
  * ```
  */
 class DSquareSDK private constructor(){
@@ -58,11 +57,10 @@ class DSquareSDK private constructor(){
             get() = _appContainer
                 ?: throw IllegalStateException("DSquareSDK.init() must be called before using the SDK")
 
-        private var _loginUseCase: LoginUseCase? = null
-        private val loginUseCase: LoginUseCase
-            get() = _loginUseCase ?: LoginUseCase(
-                loginRepo = LoginRepo(appContainer.remoteSource, appContainer.tokenManager),
-                validatePhoneUseCase = ValidatePhoneUseCase()
+        private var _loginUseCase: LoginByUuidUseCase? = null
+        private val loginUseCase: LoginByUuidUseCase
+            get() = _loginUseCase ?: LoginByUuidUseCase(
+                loginRepo = LoginRepo(appContainer.remoteSource, appContainer.tokenManager)
             ).also { _loginUseCase = it }
 
         /**
@@ -96,21 +94,26 @@ class DSquareSDK private constructor(){
         }
 
         /**
-         * Authenticates a user with the given phone number.
+         * Authenticates a user with the given user ID.
+         *
+         * The token API is designed for systems that already have existing users.
+         * Instead of requiring new integrations or migrating user data, you can
+         * pass your existing user identifier directly and the SDK will handle
+         * token generation and session management.
          *
          * This is a **suspend** function — call it from a coroutine scope.
          * For Java or blocking usage see [logInBlocking].
          *
-         * @param phone the user's phone number (must be exactly 11 digits).
+         * @param userId the unique identifier of the user in your system.
          * @return [LoginResult.Success] on success, or [LoginResult.Error] with
          *         an [ErrorCode] and a human-readable message on failure.
          */
-        suspend fun logIn(phone: String): LoginResult {
+        suspend fun logIn(userId: String): LoginResult {
             if (!checkInitialized()) return LoginResult.Error(
                 ErrorCode.UNKNOWN,
                 "SDK not initialized"
             )
-            return when (val result = loginUseCase.invoke(phone)) {
+            return when (val result = loginUseCase.invoke(userId)) {
                 is Result.Success -> LoginResult.Success
                 is Result.Failure -> LoginResult.Error(
                     code = result.exception.toErrorCode(),
@@ -124,13 +127,13 @@ class DSquareSDK private constructor(){
          *
          * **Must not be called on the main thread.**
          *
-         * @param phone the user's phone number (must be exactly 11 digits).
+         * @param userId the unique identifier of the user in your system.
          * @return [LoginResult.Success] on success, or [LoginResult.Error] on failure.
          * @see logIn
          */
         @WorkerThread
         @JvmStatic
-        fun logInBlocking(phone: String): LoginResult = runBlocking { logIn(phone) }
+        fun logInBlocking(userId: String): LoginResult = runBlocking { logIn(userId) }
 
         /**
          * Clears the stored session token, effectively logging the user out.
@@ -341,11 +344,11 @@ class DSquareSDK private constructor(){
 
         @VisibleForTesting
         internal fun resetForTesting(
-            loginUseCase: LoginUseCase? = null,
+            loginByUuidUseCase: LoginByUuidUseCase? = null,
             appContainer: AppContainer? = null
         ) {
             _appContainer = appContainer
-            _loginUseCase = loginUseCase
+            _loginUseCase = loginByUuidUseCase
         }
 
         private fun DomainException.toErrorCode(): ErrorCode = when (this) {

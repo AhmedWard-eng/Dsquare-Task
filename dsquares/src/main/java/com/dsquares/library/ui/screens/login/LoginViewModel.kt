@@ -4,13 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
-import com.dsquares.library.domain.usecase.LoginUseCase
+import com.dsquares.library.domain.usecase.LoginByPhoneNumberUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
+class LoginViewModel(private val loginByPhoneNumberUseCase: LoginByPhoneNumberUseCase) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
@@ -19,7 +19,7 @@ class LoginViewModel(private val loginUseCase: LoginUseCase) : ViewModel() {
         if (_loginState.value is LoginUiState.Loading) return
         _loginState.value = LoginUiState.Loading
         viewModelScope.launch {
-            when (val result = loginUseCase(phone)) {
+            when (val result = loginByPhoneNumberUseCase(phone)) {
                 is Result.Success -> _loginState.value = LoginUiState.Success
                 is Result.Failure -> when (result.exception) {
                     is DomainException.NoConnectivityException -> _loginState.value =

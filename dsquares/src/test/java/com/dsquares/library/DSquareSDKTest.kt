@@ -6,7 +6,8 @@ import com.dsquares.library.data.local.TokenManager
 import com.dsquares.library.di.AppContainer
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
-import com.dsquares.library.domain.usecase.LoginUseCase
+import com.dsquares.library.domain.usecase.LoginByUuidUseCase
+import com.dsquares.library.constants.TAG
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,7 +27,7 @@ class DSquareSDKTest {
 
     private val mockApplication = mockk<Application>(relaxed = true)
     private val mockTokenManager = mockk<TokenManager>()
-    private val mockLoginUseCase = mockk<LoginUseCase>()
+    private val mockLoginByUuidUseCase = mockk<LoginByUuidUseCase>()
 
     @Before
     fun setup() {
@@ -35,7 +36,7 @@ class DSquareSDKTest {
         every { Log.w(any(), any<String>()) } returns 0
 
         DSquareSDK.resetForTesting(
-            loginUseCase = mockLoginUseCase,
+            loginByUuidUseCase = mockLoginByUuidUseCase,
             appContainer = mockk<AppContainer>(relaxed = true) {
                 every { tokenManager } returns mockTokenManager
             }
@@ -54,7 +55,7 @@ class DSquareSDKTest {
     fun `given valid apiKey, when init is called, then SDK is initialized`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "valid-key")
 
-        coEvery { mockLoginUseCase.invoke(any()) } returns Result.Success(Unit)
+        coEvery { mockLoginByUuidUseCase.invoke(any()) } returns Result.Success(Unit)
 
         val result = DSquareSDK.logIn("01234567890")
 
@@ -71,7 +72,8 @@ class DSquareSDKTest {
         val result = DSquareSDK.logIn("01234567890")
 
         assertEquals(LoginResult.Error(ErrorCode.UNKNOWN, "SDK not initialized"), result)
-        coVerify(exactly = 0) { mockLoginUseCase.invoke(any()) }
+        coVerify(exactly = 0) { mockLoginByUuidUseCase.invoke(any()) }
+        verify { Log.e(TAG, "API key must not be blank") }
     }
 
     @Test
@@ -92,25 +94,26 @@ class DSquareSDKTest {
         val result = DSquareSDK.logIn("01234567890")
 
         assertEquals(LoginResult.Error(ErrorCode.UNKNOWN, "SDK not initialized"), result)
-        coVerify(exactly = 0) { mockLoginUseCase.invoke(any()) }
+        coVerify(exactly = 0) { mockLoginByUuidUseCase.invoke(any()) }
+        verify { Log.e(TAG, "DSquareSDK.init() must be called before using the SDK") }
     }
 
     @Test
     fun `given LoginUseCase returns Success, when logIn is called, then returns LoginResult Success`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "key")
-        coEvery { mockLoginUseCase.invoke("01234567890") } returns Result.Success(Unit)
+        coEvery { mockLoginByUuidUseCase.invoke("01234567890") } returns Result.Success(Unit)
 
         val result = DSquareSDK.logIn("01234567890")
 
         assertEquals(LoginResult.Success, result)
-        coVerify(exactly = 1) { mockLoginUseCase.invoke("01234567890") }
+        coVerify(exactly = 1) { mockLoginByUuidUseCase.invoke("01234567890") }
     }
 
     @Test
     fun `given LoginUseCase returns InvalidPhoneNumberException, when logIn is called, then returns INVALID_PHONE`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "key")
         val exception = DomainException.InvalidPhoneNumberException()
-        coEvery { mockLoginUseCase.invoke(any()) } returns Result.Failure(exception)
+        coEvery { mockLoginByUuidUseCase.invoke(any()) } returns Result.Failure(exception)
 
         val result = DSquareSDK.logIn("123")
 
@@ -122,7 +125,7 @@ class DSquareSDKTest {
     fun `given LoginUseCase returns NoConnectivityException, when logIn is called, then returns NO_INTERNET`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "key")
         val exception = DomainException.NoConnectivityException()
-        coEvery { mockLoginUseCase.invoke(any()) } returns Result.Failure(exception)
+        coEvery { mockLoginByUuidUseCase.invoke(any()) } returns Result.Failure(exception)
 
         val result = DSquareSDK.logIn("01234567890")
 
@@ -134,7 +137,7 @@ class DSquareSDKTest {
     fun `given LoginUseCase returns NetworkException, when logIn is called, then returns NETWORK_ERROR`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "key")
         val exception = DomainException.NetworkException(RuntimeException("timeout"))
-        coEvery { mockLoginUseCase.invoke(any()) } returns Result.Failure(exception)
+        coEvery { mockLoginByUuidUseCase.invoke(any()) } returns Result.Failure(exception)
 
         val result = DSquareSDK.logIn("01234567890")
 
@@ -146,7 +149,7 @@ class DSquareSDKTest {
     fun `given LoginUseCase returns LoginFailedException, when logIn is called, then returns LOGIN_FAILED`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "key")
         val exception = DomainException.LoginFailedException("Invalid credentials")
-        coEvery { mockLoginUseCase.invoke(any()) } returns Result.Failure(exception)
+        coEvery { mockLoginByUuidUseCase.invoke(any()) } returns Result.Failure(exception)
 
         val result = DSquareSDK.logIn("01234567890")
 
@@ -158,7 +161,7 @@ class DSquareSDKTest {
     fun `given LoginUseCase returns UnknownException, when logIn is called, then returns UNKNOWN`() = runTest {
         DSquareSDK.init(mockApplication, apiKey = "key")
         val exception = DomainException.UnknownException(RuntimeException("unexpected"))
-        coEvery { mockLoginUseCase.invoke(any()) } returns Result.Failure(exception)
+        coEvery { mockLoginByUuidUseCase.invoke(any()) } returns Result.Failure(exception)
 
         val result = DSquareSDK.logIn("01234567890")
 
@@ -176,6 +179,7 @@ class DSquareSDKTest {
 
         assertFalse(result)
         coVerify(exactly = 0) { mockTokenManager.clearToken() }
+        verify { Log.e(TAG, "DSquareSDK.init() must be called before using the SDK") }
     }
 
     // ── Not-initialized guard for all public APIs ────────────────────────
@@ -187,7 +191,8 @@ class DSquareSDKTest {
         val result = DSquareSDK.logInBlocking("01234567890")
 
         assertEquals(LoginResult.Error(ErrorCode.UNKNOWN, "SDK not initialized"), result)
-        coVerify(exactly = 0) { mockLoginUseCase.invoke(any()) }
+        coVerify(exactly = 0) { mockLoginByUuidUseCase.invoke(any()) }
+        verify { Log.e(TAG, "DSquareSDK.init() must be called before using the SDK") }
     }
 
     @Test
@@ -198,6 +203,7 @@ class DSquareSDKTest {
 
         assertFalse(result)
         coVerify(exactly = 0) { mockTokenManager.clearToken() }
+        verify { Log.e(TAG, "DSquareSDK.init() must be called before using the SDK") }
     }
 
     @Test
