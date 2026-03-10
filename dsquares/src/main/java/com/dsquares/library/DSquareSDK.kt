@@ -47,7 +47,7 @@ import kotlinx.coroutines.runBlocking
  * LoginResult result = DSquareSDK.logInBlocking("+20123456789");
  * ```
  */
-class DSquareSDK {
+class DSquareSDK private constructor(){
 
     companion object {
 
