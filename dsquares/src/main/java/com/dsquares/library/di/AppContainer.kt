@@ -19,7 +19,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 internal class AppContainer(
-    private val appContext: Context,
+    internal val appContext: Context,
     private val apiKey: String
 ) {
     val cryptoManager: CryptoManager by lazy { CryptoManager() }
