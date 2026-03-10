@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.parcelize)
 }
 
+version = "1.0.0"
+
 android {
     namespace = "com.dsquares.library"
     compileSdk {
