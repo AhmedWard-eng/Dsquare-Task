@@ -1,9 +1,9 @@
 package com.dsquares.library.data.network
 
+import com.dsquares.library.DSquareSDK
 import com.dsquares.library.data.network.model.BaseResponse
 import com.dsquares.library.data.network.model.items.ItemResult
 import com.dsquares.library.data.network.model.login.LoginResult
-import com.dsquares.library.di.ServiceLocator
 import kotlinx.coroutines.delay
 import java.io.IOException
 
@@ -45,7 +45,7 @@ class MockRemoteSource : IRemoteSource {
         }
 
         // Get locale-appropriate data
-        val locale = ServiceLocator.appContext?.resources?.configuration?.locales?.get(0)
+        val locale = DSquareSDK.appContainer.appContext.resources?.configuration?.locales?.get(0)
         val isArabic = locale?.language == "ar"
         val allItems = if (isArabic) MockCouponData.arabicItems else MockCouponData.englishItems
 
