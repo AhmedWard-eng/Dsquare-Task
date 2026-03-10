@@ -15,8 +15,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.After
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -78,6 +80,7 @@ class LoginRepoTest {
                 userId = "user-1"
             )
         }
+        verify(exactly = 0) { Log.d(any(), any()) }
     }
 
     @Test
@@ -216,8 +219,8 @@ class LoginRepoTest {
     }
 
     @Test
-    fun `given generic exception, when login is called, then UnknownException returned`() = runTest {
-        every { Log.d(TAG,"Failed to fetch items: unexpected") } returns -1
+    fun `given generic exception, when login is called, then UnknownException returned and error is logged`() = runTest {
+        every { Log.d(any(), any()) } returns 0
         coEvery { remoteSource.login("user-1") } throws RuntimeException("unexpected")
 
         val result = loginRepo.login("user-1")
@@ -226,5 +229,18 @@ class LoginRepoTest {
         val exception = (result as Result.Failure).exception
         assertTrue(exception is DomainException.UnknownException)
         assertEquals("Unexpected error: unexpected", exception.message)
+        verify { Log.d(TAG, "Failed to fetch items: unexpected") }
+    }
+
+    @Test
+    fun `given HttpException, when login is called, then HttpException returned`() = runTest {
+        coEvery { remoteSource.login("user-1") } throws
+                retrofit2.HttpException(retrofit2.Response.error<Any>(503, "".toResponseBody()))
+
+        val result = loginRepo.login("user-1")
+
+        assertTrue(result is Result.Failure)
+        assertTrue((result as Result.Failure).exception is DomainException.HttpException)
+        verify(exactly = 0) { Log.d(any(), any()) }
     }
 }

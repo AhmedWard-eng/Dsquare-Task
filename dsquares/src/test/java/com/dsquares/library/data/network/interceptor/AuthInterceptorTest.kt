@@ -40,25 +40,13 @@ class AuthInterceptorTest {
     }
 
     @Test
-    fun `given valid token exists, when intercepting request, then Authorization header is attached`() {
+    fun `given valid token exists, when intercepting request, then Authorization header is Bearer plus token`() {
         coEvery { tokenManager.getAccessToken() } returns "my-access-token"
-        coEvery { tokenManager.getTokenType() } returns "Bearer"
         stubChain()
 
         interceptor.intercept(chain)
 
         assertEquals("Bearer my-access-token", requestSlot.captured.header("Authorization"))
-    }
-
-    @Test
-    fun `given null token type, when intercepting request, then Authorization defaults to Bearer`() {
-        coEvery { tokenManager.getAccessToken() } returns "my-token"
-        coEvery { tokenManager.getTokenType() } returns null
-        stubChain()
-
-        interceptor.intercept(chain)
-
-        assertEquals("Bearer my-token", requestSlot.captured.header("Authorization"))
     }
 
     @Test

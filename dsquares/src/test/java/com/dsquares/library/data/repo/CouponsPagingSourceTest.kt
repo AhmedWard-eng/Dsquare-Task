@@ -15,6 +15,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.After
@@ -108,6 +109,7 @@ class CouponsPagingSourceTest {
         val page = result as PagingSource.LoadResult.Page
         assertNull(page.prevKey)
         assertEquals(2, page.nextKey)
+        verify(exactly = 0) { Log.d(any(), any()) }
     }
 
     @Test
@@ -391,8 +393,8 @@ class CouponsPagingSourceTest {
     }
 
     @Test
-    fun `given generic exception, when loaded, then returns UnknownException`() = runTest {
-        every { Log.d(TAG, "Failed to fetch items: unexpected") } returns -1
+    fun `given generic exception, when loaded, then returns UnknownException and error is logged`() = runTest {
+        every { Log.d(any(), any()) } returns 0
         coEvery { remoteSource.getItems(any(), any(), any(), any(), any()) } throws
                 RuntimeException("unexpected")
 
@@ -402,6 +404,7 @@ class CouponsPagingSourceTest {
         val error = (result as PagingSource.LoadResult.Error).throwable
         assertTrue(error is DomainException.UnknownException)
         assertEquals("Unexpected error: unexpected", error.message)
+        verify { Log.d(TAG, "Failed to fetch items: unexpected") }
     }
 
     // ── Parameters passed correctly ─────────────────────────────────────

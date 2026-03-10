@@ -215,4 +215,25 @@ class TokenAuthenticatorTest {
         assertNull(retryRequest)
         coVerify(exactly = 0) { tokenManager.saveToken(any(), any(), any(), any(), any()) }
     }
+
+
+    @Test
+    fun `given token not expired but currentToken is null, when authenticating, then falls through to refresh`() {
+        coEvery { tokenManager.getAccessToken() } returns null
+        coEvery { tokenManager.isTokenExpired() } returns false
+        coEvery { tokenManager.getUserId() } returns "user123"
+        coEvery { remoteSource.login("user123") } returns loginResult()
+
+        val request = Request.Builder()
+            .url("https://api.example.com/api/DynamicApp/v1/Integration/Items")
+            .header("Authorization", "Bearer old-token")
+            .build()
+        val response = build401Response(request)
+
+        val retryRequest = authenticator.authenticate(null, response)
+
+        assertNotNull(retryRequest)
+        assertEquals("Bearer new-access", retryRequest!!.header("Authorization"))
+        coVerify { remoteSource.login("user123") }
+    }
 }
