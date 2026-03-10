@@ -88,7 +88,7 @@ fun CouponCard(
                     modifier = Modifier.fillMaxSize()
                 )
 
-                if (!coupon.discount.isNullOrEmpty() && coupon.discount != "0") {
+                if (coupon.discount?.toDoubleOrNull()?.takeIf { it != 0.0 } != null) {
                     DiscountBadge(
                         discount = coupon.discount,
                         modifier = Modifier
