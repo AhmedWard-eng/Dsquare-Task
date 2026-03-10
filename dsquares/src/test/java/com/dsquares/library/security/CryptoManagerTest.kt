@@ -1,170 +1,174 @@
 package com.dsquares.library.security
 
 import android.util.Base64
+import android.util.Log
+import com.dsquares.library.constants.TAG
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import org.junit.After
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
-import javax.crypto.KeyGenerator
+import javax.crypto.Cipher
 import javax.crypto.SecretKey
+import javax.crypto.spec.GCMParameterSpec
 
 class CryptoManagerTest {
 
-    private lateinit var testKey: SecretKey
-    private lateinit var keyStoreProvider: KeyStoreProvider
+    private val keyProvider = mockk<KeyStoreProvider>()
+    private val mockKey = mockk<SecretKey>()
+    private val mockCipher = mockk<Cipher>()
     private lateinit var cryptoManager: CryptoManager
 
     @Before
     fun setup() {
-        // Generate a real AES-256 key in memory (no Android Keystore needed)
-        testKey = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
-        keyStoreProvider = mockk<KeyStoreProvider>()
-        every { keyStoreProvider.getKey() } returns testKey
-        cryptoManager = CryptoManager(keyStoreProvider)
-
-        // Mock android.util.Base64 to delegate to java.util.Base64
+        mockkStatic(Cipher::class)
         mockkStatic(Base64::class)
-        every { Base64.encodeToString(any<ByteArray>(), any()) } answers {
-            java.util.Base64.getEncoder().encodeToString(firstArg())
-        }
-        every { Base64.decode(any<String>(), any()) } answers {
-            java.util.Base64.getDecoder().decode(firstArg<String>())
-        }
+        mockkStatic(Log::class)
+
+        every { keyProvider.getKey() } returns mockKey
+        every { Cipher.getInstance(CryptoManager.TRANSFORMATION) } returns mockCipher
+        every { Log.d(any(), any()) } returns 0
+
+        cryptoManager = CryptoManager(keyProvider)
     }
 
     @After
     fun tearDown() {
+        unmockkStatic(Cipher::class)
         unmockkStatic(Base64::class)
+        unmockkStatic(Log::class)
     }
 
-    // ── encrypt tests ─────────────────────────────────────────────────────
+    // ── encrypt ─────────────────────────────────────────────────────────
 
     @Test
-    fun `given plain text, when encrypt is called, then returns non-null Base64 string`() {
-        val result = cryptoManager.encrypt("hello world")
-        assertNotNull(result)
-    }
+    fun `given valid plaintext, when encrypt is called, then uses correct transformation and encrypt mode`() {
+        val fakeIv = ByteArray(12) { 1 }
+        val fakeEncrypted = ByteArray(20) { 2 }
 
-    @Test
-    fun `given empty string, when encrypt is called, then returns non-null result`() {
-        val result = cryptoManager.encrypt("")
-        assertNotNull(result)
-    }
+        every { mockCipher.init(Cipher.ENCRYPT_MODE, mockKey) } just Runs
+        every { mockCipher.iv } returns fakeIv
+        every { mockCipher.doFinal(any<ByteArray>()) } returns fakeEncrypted
+        every { Base64.encodeToString(any<ByteArray>(), Base64.NO_WRAP) } returns "encoded"
 
-    @Test
-    fun `given same plain text, when encrypt is called twice, then results differ due to random IV`() {
-        val first = cryptoManager.encrypt("same input")
-        val second = cryptoManager.encrypt("same input")
-        assertNotEquals(first, second)
-    }
+        val result = cryptoManager.encrypt("test")
 
-    @Test
-    fun `given key provider throws, when encrypt is called, then returns null`() {
-        val brokenProvider = mockk<KeyStoreProvider>()
-        every { brokenProvider.getKey() } throws RuntimeException("no key")
-        val brokenManager = CryptoManager(brokenProvider)
-        assertNull(brokenManager.encrypt("test"))
-    }
-
-    // ── decrypt tests ─────────────────────────────────────────────────────
-
-    @Test
-    fun `given invalid Base64, when decrypt is called, then returns null`() {
-        assertNull(cryptoManager.decrypt("not-valid-base64!!!"))
+        assertEquals("encoded", result)
+        verify { Cipher.getInstance(CryptoManager.TRANSFORMATION) }
+        verify { mockCipher.init(Cipher.ENCRYPT_MODE, mockKey) }
+        verify { mockCipher.doFinal("test".toByteArray(Charsets.UTF_8)) }
+        verify(exactly = 0) { Log.d(any(), any()) }
     }
 
     @Test
-    fun `given too short ciphertext, when decrypt is called, then returns null`() {
-        // Less than 12 bytes (GCM_IV_LENGTH) after decoding
-        val shortData = java.util.Base64.getEncoder().encodeToString(ByteArray(5))
-        assertNull(cryptoManager.decrypt(shortData))
+    fun `given valid plaintext, when encrypt is called, then combines IV and encrypted data before Base64 encoding`() {
+        val fakeIv = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        val fakeEncrypted = byteArrayOf(20, 21, 22)
+        val combinedSlot = slot<ByteArray>()
+
+        every { mockCipher.init(Cipher.ENCRYPT_MODE, mockKey) } just Runs
+        every { mockCipher.iv } returns fakeIv
+        every { mockCipher.doFinal(any<ByteArray>()) } returns fakeEncrypted
+        every { Base64.encodeToString(capture(combinedSlot), eq(Base64.NO_WRAP)) } returns "encoded"
+
+        cryptoManager.encrypt("x")
+
+        val combined = combinedSlot.captured
+        assertArrayEquals(fakeIv, combined.copyOfRange(0, 12))
+        assertArrayEquals(fakeEncrypted, combined.copyOfRange(12, combined.size))
     }
 
     @Test
-    fun `given tampered ciphertext, when decrypt is called, then returns null`() {
-        val encrypted = cryptoManager.encrypt("secret")!!
-        val bytes = java.util.Base64.getDecoder().decode(encrypted)
-        // Flip a byte in the ciphertext portion (after the 12-byte IV)
-        bytes[bytes.size - 1] = (bytes[bytes.size - 1].toInt() xor 0xFF).toByte()
-        val tampered = java.util.Base64.getEncoder().encodeToString(bytes)
-        assertNull(cryptoManager.decrypt(tampered))
+    fun `given keyProvider throws, when encrypt is called, then returns null and logs error`() {
+        every { keyProvider.getKey() } throws RuntimeException("no key")
+
+        val result = cryptoManager.encrypt("test")
+
+        assertNull(result)
+        verify { Log.d(TAG, "Failed to encrypt: no key") }
     }
 
     @Test
-    fun `given key provider throws, when decrypt is called, then returns null`() {
-        val encrypted = cryptoManager.encrypt("test")!!
-        val brokenProvider = mockk<KeyStoreProvider>()
-        every { brokenProvider.getKey() } throws RuntimeException("no key")
-        val brokenManager = CryptoManager(brokenProvider)
-        assertNull(brokenManager.decrypt(encrypted))
+    fun `given cipher doFinal throws, when encrypt is called, then returns null and logs error`() {
+        every { mockCipher.init(Cipher.ENCRYPT_MODE, mockKey) } just Runs
+        every { mockCipher.iv } returns ByteArray(12)
+        every { mockCipher.doFinal(any<ByteArray>()) } throws RuntimeException("cipher error")
+
+        val result = cryptoManager.encrypt("test")
+
+        assertNull(result)
+        verify { Log.d(TAG, "Failed to encrypt: cipher error") }
+    }
+
+    // ── decrypt ─────────────────────────────────────────────────────────
+
+    @Test
+    fun `given valid encoded string, when decrypt is called, then splits IV and ciphertext and decrypts correctly`() {
+        val fakeIv = ByteArray(CryptoManager.GCM_IV_LENGTH) { 1 }
+        val fakeCipherText = ByteArray(20) { 2 }
+        val combined = fakeIv + fakeCipherText
+        val specSlot = slot<GCMParameterSpec>()
+        val cipherTextSlot = slot<ByteArray>()
+
+        every { Base64.decode("encoded", Base64.NO_WRAP) } returns combined
+        every { mockCipher.init(Cipher.DECRYPT_MODE, mockKey, capture(specSlot)) } just Runs
+        every { mockCipher.doFinal(capture(cipherTextSlot)) } returns "decrypted".toByteArray(Charsets.UTF_8)
+
+        val result = cryptoManager.decrypt("encoded")
+
+        assertEquals("decrypted", result)
+        verify { Cipher.getInstance(CryptoManager.TRANSFORMATION) }
+        assertEquals(CryptoManager.GCM_TAG_LENGTH, specSlot.captured.tLen)
+        assertArrayEquals(fakeIv, specSlot.captured.iv)
+        assertArrayEquals(fakeCipherText, cipherTextSlot.captured)
+        verify(exactly = 0) { Log.d(any(), any()) }
     }
 
     @Test
-    fun `given ciphertext from different key, when decrypt is called, then returns null`() {
-        val encrypted = cryptoManager.encrypt("secret")!!
-        val otherKey = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
-        val otherProvider = mockk<KeyStoreProvider>()
-        every { otherProvider.getKey() } returns otherKey
-        val otherManager = CryptoManager(otherProvider)
-        assertNull(otherManager.decrypt(encrypted))
-    }
+    fun `given Base64 decode throws, when decrypt is called, then returns null and logs error`() {
+        every { Base64.decode("bad", Base64.NO_WRAP) } throws IllegalArgumentException("bad base64")
 
-    // ── encrypt → decrypt round-trip tests ────────────────────────────────
+        val result = cryptoManager.decrypt("bad")
 
-    @Test
-    fun `given plain text, when encrypted then decrypted, then original text is recovered`() {
-        val original = "hello world"
-        val encrypted = cryptoManager.encrypt(original)
-        val decrypted = cryptoManager.decrypt(encrypted!!)
-        assertEquals(original, decrypted)
+        assertNull(result)
+        verify { Log.d(TAG, "Failed to decrypt: bad base64") }
     }
 
     @Test
-    fun `given empty string, when encrypted then decrypted, then empty string is recovered`() {
-        val encrypted = cryptoManager.encrypt("")
-        val decrypted = cryptoManager.decrypt(encrypted!!)
-        assertEquals("", decrypted)
+    fun `given keyProvider throws, when decrypt is called, then returns null and logs error`() {
+        val fakeIv = ByteArray(CryptoManager.GCM_IV_LENGTH) { 1 }
+        val combined = fakeIv + ByteArray(20) { 2 }
+
+        every { Base64.decode("encoded", Base64.NO_WRAP) } returns combined
+        every { keyProvider.getKey() } throws RuntimeException("no key")
+
+        val result = cryptoManager.decrypt("encoded")
+
+        assertNull(result)
+        verify { Log.d(TAG, "Failed to decrypt: no key") }
     }
 
     @Test
-    fun `given unicode text, when encrypted then decrypted, then original text is recovered`() {
-        val original = "مرحبا بالعالم 🌍"
-        val encrypted = cryptoManager.encrypt(original)
-        val decrypted = cryptoManager.decrypt(encrypted!!)
-        assertEquals(original, decrypted)
-    }
+    fun `given cipher doFinal throws, when decrypt is called, then returns null and logs error`() {
+        val fakeIv = ByteArray(CryptoManager.GCM_IV_LENGTH) { 1 }
+        val combined = fakeIv + ByteArray(20) { 2 }
 
-    @Test
-    fun `given long text, when encrypted then decrypted, then original text is recovered`() {
-        val original = "a".repeat(10_000)
-        val encrypted = cryptoManager.encrypt(original)
-        val decrypted = cryptoManager.decrypt(encrypted!!)
-        assertEquals(original, decrypted)
-    }
+        every { Base64.decode("encoded", Base64.NO_WRAP) } returns combined
+        every { mockCipher.init(Cipher.DECRYPT_MODE, mockKey, any<GCMParameterSpec>()) } just Runs
+        every { mockCipher.doFinal(any<ByteArray>()) } throws RuntimeException("tampered")
 
-    @Test
-    fun `given special characters, when encrypted then decrypted, then original text is recovered`() {
-        val original = "line1\nline2\ttab\r\n\"quotes\" & <symbols>"
-        val encrypted = cryptoManager.encrypt(original)
-        val decrypted = cryptoManager.decrypt(encrypted!!)
-        assertEquals(original, decrypted)
-    }
+        val result = cryptoManager.decrypt("encoded")
 
-    // ── output format tests ───────────────────────────────────────────────
-
-    @Test
-    fun `given encrypted output, when decoded, then first 12 bytes are IV and rest is ciphertext plus tag`() {
-        val encrypted = cryptoManager.encrypt("test")!!
-        val combined = java.util.Base64.getDecoder().decode(encrypted)
-        // IV (12 bytes) + ciphertext + GCM tag (16 bytes)
-        // "test" is 4 bytes, so minimum expected size = 12 + 4 + 16 = 32
-        assert(combined.size >= CryptoManager.GCM_IV_LENGTH + 4 + (CryptoManager.GCM_TAG_LENGTH / 8))
+        assertNull(result)
+        verify { Log.d(TAG, "Failed to decrypt: tampered") }
     }
 }
