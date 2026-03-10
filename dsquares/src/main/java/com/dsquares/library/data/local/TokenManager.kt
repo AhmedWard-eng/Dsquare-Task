@@ -50,9 +50,8 @@ class TokenManager(
 
         val encryptedAccess = execute { cryptoManager.encrypt(accessToken) }
         val encryptedRefresh = execute { cryptoManager.encrypt(refreshToken) }
-        val encryptedUserId = execute { cryptoManager.encrypt(userId) }
 
-        if (encryptedAccess == null || encryptedRefresh == null || encryptedUserId == null) {
+        if (encryptedAccess == null || encryptedRefresh == null) {
             Log.e(TAG, "Failed to encrypt tokens. This may indicate a problem with the Android Keystore on this device.")
             return false
         }
@@ -63,7 +62,7 @@ class TokenManager(
             prefs[REFRESH_TOKEN_KEY] = encryptedRefresh
             prefs[TOKEN_TYPE_KEY] = tokenType
             prefs[EXPIRES_AT_KEY] = expiresAt
-            prefs[USER_ID_KEY] = encryptedUserId
+            prefs[USER_ID_KEY] = userId
         }
         return true
     }
@@ -96,7 +95,7 @@ class TokenManager(
         val store = requireDataStore() ?: return null
         return try {
             store.data.map { prefs ->
-                prefs[USER_ID_KEY]?.let { execute { cryptoManager.decrypt(it) } }
+                prefs[USER_ID_KEY]
             }.first()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read user ID", e)

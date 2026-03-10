@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.dsquares.library.security.CryptoManager
+import com.dsquares.library.constants.TAG
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -60,72 +61,70 @@ class TokenManagerTest {
     // ── Null DataStore tests ──────────────────────────────────────────────
 
     @Test
-    fun `given null dataStore, when saveToken is called, then returns false`() = runTest {
+    fun `given null dataStore, when saveToken is called, then returns false and logs warning`() = runTest {
         val tokenManager = tokenManagerWithNullDataStore()
         val result = tokenManager.saveToken("access", "refresh", "Bearer", 30, "user-1")
         assertFalse(result)
+        verify { Log.d(TAG, any()) }
     }
 
     @Test
-    fun `given null dataStore, when getAccessToken is called, then returns null`() = runTest {
+    fun `given null dataStore, when getAccessToken is called, then returns null and logs warning`() = runTest {
         val tokenManager = tokenManagerWithNullDataStore()
         assertNull(tokenManager.getAccessToken())
+        verify { Log.d(TAG, any()) }
     }
 
     @Test
-    fun `given null dataStore, when getTokenType is called, then returns null`() = runTest {
+    fun `given null dataStore, when getTokenType is called, then returns null and logs warning`() = runTest {
         val tokenManager = tokenManagerWithNullDataStore()
         assertNull(tokenManager.getTokenType())
+        verify { Log.d(TAG, any()) }
     }
 
     @Test
-    fun `given null dataStore, when getUserId is called, then returns null`() = runTest {
+    fun `given null dataStore, when getUserId is called, then returns null and logs warning`() = runTest {
         val tokenManager = tokenManagerWithNullDataStore()
         assertNull(tokenManager.getUserId())
+        verify { Log.d(TAG, any()) }
     }
 
     @Test
-    fun `given null dataStore, when isTokenExpired is called, then returns true`() = runTest {
+    fun `given null dataStore, when isTokenExpired is called, then returns true and logs warning`() = runTest {
         val tokenManager = tokenManagerWithNullDataStore()
         assertTrue(tokenManager.isTokenExpired())
+        verify { Log.d(TAG, any()) }
     }
 
     @Test
-    fun `given null dataStore, when clearToken is called, then returns false`() = runTest {
+    fun `given null dataStore, when clearToken is called, then returns false and logs warning`() = runTest {
         val tokenManager = tokenManagerWithNullDataStore()
         assertFalse(tokenManager.clearToken())
+        verify { Log.d(TAG, any()) }
     }
 
     // ── Encryption failure tests ─────────────────────────────────────────
 
     @Test
-    fun `given encrypt returns null for accessToken, when saveToken is called, then returns false`() = runTest {
+    fun `given encrypt returns null for accessToken, when saveToken is called, then returns false and logs error`() = runTest {
         val tokenManager = tokenManagerWithDataStore()
         every { cryptoManager.encrypt("access") } returns null
         every { cryptoManager.encrypt("refresh") } returns "enc-refresh"
         every { cryptoManager.encrypt("user-1") } returns "enc-user"
 
         assertFalse(tokenManager.saveToken("access", "refresh", "Bearer", 30, "user-1"))
+        verify { Log.e(TAG, "Failed to encrypt tokens. This may indicate a problem with the Android Keystore on this device.") }
     }
 
     @Test
-    fun `given encrypt returns null for refreshToken, when saveToken is called, then returns false`() = runTest {
-        val  tokenManager = tokenManagerWithDataStore()
+    fun `given encrypt returns null for refreshToken, when saveToken is called, then returns false and logs error`() = runTest {
+        val tokenManager = tokenManagerWithDataStore()
         every { cryptoManager.encrypt("access") } returns "enc-access"
         every { cryptoManager.encrypt("refresh") } returns null
         every { cryptoManager.encrypt("user-1") } returns "enc-user"
 
         assertFalse(tokenManager.saveToken("access", "refresh", "Bearer", 30, "user-1"))
-    }
-
-    @Test
-    fun `given encrypt returns null for userId, when saveToken is called, then returns false`() = runTest {
-        val tokenManager = tokenManagerWithDataStore()
-        every { cryptoManager.encrypt("access") } returns "enc-access"
-        every { cryptoManager.encrypt("refresh") } returns "enc-refresh"
-        every { cryptoManager.encrypt("user-1") } returns null
-
-        assertFalse(tokenManager.saveToken("access", "refresh", "Bearer", 30, "user-1"))
+        verify { Log.e(TAG, "Failed to encrypt tokens. This may indicate a problem with the Android Keystore on this device.") }
     }
 
     @Test
@@ -133,13 +132,11 @@ class TokenManagerTest {
         val tokenManager = tokenManagerWithDataStore()
         every { cryptoManager.encrypt("my-access") } returns "enc-access"
         every { cryptoManager.encrypt("my-refresh") } returns "enc-refresh"
-        every { cryptoManager.encrypt("my-user") } returns "enc-user"
 
         tokenManager.saveToken("my-access", "my-refresh", "Bearer", 30, "my-user")
 
         verify { cryptoManager.encrypt("my-access") }
         verify { cryptoManager.encrypt("my-refresh") }
-        verify { cryptoManager.encrypt("my-user") }
     }
 
     // ── End-to-end tests (save → read round-trip) ────────────────────────
@@ -201,5 +198,18 @@ class TokenManagerTest {
 
         assertEquals("access-2", tokenManager.getAccessToken())
         assertEquals("Custom", tokenManager.getTokenType())
+    }
+
+    // ── Decrypt returns null ─────────────────────────────────────────────
+
+    @Test
+    fun `given decrypt returns null for accessToken, when getAccessToken is called, then returns null`() = runTest {
+        val tokenManager = tokenManagerWithDataStore()
+        every { cryptoManager.encrypt(any()) } returns "encrypted"
+        every { cryptoManager.decrypt("encrypted") } returns null
+
+        tokenManager.saveToken("access", "refresh", "Bearer", 60, "user")
+
+        assertNull(tokenManager.getAccessToken())
     }
 }
