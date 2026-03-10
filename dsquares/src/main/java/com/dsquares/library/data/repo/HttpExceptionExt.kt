@@ -15,10 +15,8 @@ fun HttpException.extractErrorMessage(): String {
 
         val errorMessage = errorJson.optString("message").ifEmpty { null }
             ?: errorJson.optString("errors").ifEmpty { null }
-        val statusName = errorJson.optString("statusName").ifEmpty { null }
 
         when {
-            statusName != null && errorMessage != null -> "$statusName: $errorMessage"
             errorMessage != null -> errorMessage
             else -> message()
         }

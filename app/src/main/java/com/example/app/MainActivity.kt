@@ -85,6 +85,9 @@ class MainActivity : ComponentActivity() {
                         },
                         onGoToTheXML = {
                             startActivity(Intent(this, XMLActivity::class.java))
+                        },
+                        onLogout = {
+                            DSquareSDK.logout()
                         }
                     )
                 }
@@ -98,7 +101,8 @@ fun DSquareScreen(
     modifier: Modifier = Modifier,
     onLoginClick: suspend (String) -> Unit = {},
     onShowCouponsClick: () -> Unit = {},
-    onGoToTheXML: () -> Unit = {}
+    onGoToTheXML: () -> Unit = {},
+    onLogout: suspend () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     Column(
@@ -128,6 +132,15 @@ fun DSquareScreen(
             modifier = Modifier.size(200.dp, 50.dp), onClick = onGoToTheXML
         ) {
             Text("go to the xml screen")
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Button(
+            modifier = Modifier.size(200.dp, 50.dp), onClick = { coroutineScope.launch {
+                onLogout()
+            } }
+        ) {
+            Text("logout")
         }
 
     }

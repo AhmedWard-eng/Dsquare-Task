@@ -30,6 +30,7 @@ import com.dsquares.library.ui.theme.DsquareTaskTheme
 @Composable
 fun LoginScreen(
     loginState: LoginUiState,
+    isUserLoggedIn: Boolean,
     onLoginClick: (String) -> Unit,
     onCouponsClick: () -> Unit,
     onLoginSuccess: () -> Unit,
@@ -81,6 +82,8 @@ fun LoginScreen(
                 text = stringResource(R.string.login),
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f),
                 onClick = { onLoginClick(phoneState.text.toString()) },
                 isLoading = isLoading
             )
@@ -89,9 +92,12 @@ fun LoginScreen(
 
             DsquareButton(
                 text = stringResource(R.string.coupons),
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                onClick = onCouponsClick
+                containerColor =  MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                onClick = onCouponsClick,
+                enabled = isUserLoggedIn
             )
         }
     }
@@ -121,6 +127,7 @@ fun LoginScreenPreview() {
     DsquareTaskTheme {
         LoginScreen(
             loginState = LoginUiState.Idle,
+            isUserLoggedIn = false,
             onLoginClick = {},
             onCouponsClick = {},
             onLoginSuccess = {},
@@ -135,6 +142,7 @@ fun LoginScreenArabicPreview() {
     DsquareTaskTheme {
         LoginScreen(
             loginState = LoginUiState.Idle,
+            isUserLoggedIn = true,
             onLoginClick = {},
             onCouponsClick = {},
             onLoginSuccess = {},

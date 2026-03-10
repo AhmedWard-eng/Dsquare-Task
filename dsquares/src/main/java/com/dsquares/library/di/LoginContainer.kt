@@ -3,6 +3,7 @@ package com.dsquares.library.di
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.dsquares.library.data.repo.LoginRepo
+import com.dsquares.library.domain.usecase.IsUserLoggedInUseCase
 import com.dsquares.library.domain.usecase.LoginByPhoneNumberUseCase
 import com.dsquares.library.domain.usecase.LoginByUuidUseCase
 import com.dsquares.library.domain.usecase.ValidatePhoneUseCase
@@ -18,10 +19,12 @@ internal class LoginContainer(appContainer: AppContainer) {
 
     private val loginByPhoneNumberUseCase = LoginByPhoneNumberUseCase(loginByUuidUseCase, validatePhoneUseCase)
 
+    private val isUserLoggedInUseCase = IsUserLoggedInUseCase(appContainer.tokenManager)
+
     val loginViewModelFactory = object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return LoginViewModel(loginByPhoneNumberUseCase) as T
+            return LoginViewModel(loginByPhoneNumberUseCase, isUserLoggedInUseCase) as T
         }
     }
 }

@@ -2,7 +2,6 @@ package com.dsquares.library.ui.navigation
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -15,7 +14,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.dsquares.library.DSquareSDK
 import com.dsquares.library.di.CouponsContainer
 import com.dsquares.library.di.LoginContainer
-import com.dsquares.library.domain.usecase.IsUserLoggedInUseCase
 import com.dsquares.library.ui.screens.coupons.CouponsScreen
 import com.dsquares.library.ui.screens.login.LoginScreen
 import com.dsquares.library.ui.screens.coupons.CouponsViewModel
@@ -30,20 +28,15 @@ fun DsquareNavGraph(navController: NavHostController, modifier: Modifier = Modif
             val container = remember { LoginContainer(DSquareSDK.appContainer) }
             val viewModel: LoginViewModel = viewModel(factory = container.loginViewModelFactory)
             val loginState by viewModel.loginState.collectAsStateWithLifecycle()
-
-            LaunchedEffect(Unit) {
-                val isUserLoggedIn = IsUserLoggedInUseCase(DSquareSDK.appContainer.tokenManager)
-                if (isUserLoggedIn()) {
-                    navController.navigate("coupons") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }
-            }
+            val isUserLoggedIn by viewModel.isUserLoggedIn.collectAsStateWithLifecycle()
 
             LoginScreen(
                 loginState = loginState,
+                isUserLoggedIn = isUserLoggedIn,
                 onLoginClick = { phone -> viewModel.login(phone) },
-                onCouponsClick = { navController.navigate("coupons") },
+                onCouponsClick = {
+                    navController.navigate("coupons")
+                },
                 onLoginSuccess = {
                     navController.navigate("coupons") {
                         popUpTo("login") { inclusive = true }

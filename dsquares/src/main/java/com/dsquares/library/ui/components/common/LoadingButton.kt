@@ -19,6 +19,8 @@ fun LoadingButton(
     text: String,
     containerColor: Color,
     contentColor: Color,
+    disabledContainerColor: Color = Color.Unspecified,
+    disabledContentColor: Color = Color.Unspecified,
     onClick: () -> Unit,
     isLoading: Boolean = false,
     enabled: Boolean = true,
@@ -32,8 +34,8 @@ fun LoadingButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
-            disabledContainerColor = containerColor.copy(alpha = 0.5f),
-            disabledContentColor = contentColor.copy(alpha = 0.5f)
+            disabledContainerColor = disabledContainerColor,
+            disabledContentColor = disabledContentColor
         ),
         shape = RoundedCornerShape(8.dp)
     ) {

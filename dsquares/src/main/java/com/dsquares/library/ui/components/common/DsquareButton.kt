@@ -17,16 +17,22 @@ fun DsquareButton(
     text: String,
     containerColor: Color,
     contentColor: Color,
-    onClick: () -> Unit
+    disabledContainerColor : Color = Color.Unspecified,
+    disabledContentColor : Color = Color.Unspecified,
+    onClick: () -> Unit,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
-            contentColor = contentColor
+            contentColor = contentColor,
+            disabledContainerColor = disabledContainerColor,
+            disabledContentColor = disabledContentColor
         ),
         shape = RoundedCornerShape(8.dp)
     ) {

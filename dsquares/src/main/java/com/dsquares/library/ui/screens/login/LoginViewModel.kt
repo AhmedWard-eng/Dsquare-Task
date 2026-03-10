@@ -4,16 +4,29 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dsquares.library.domain.DomainException
 import com.dsquares.library.domain.Result
+import com.dsquares.library.domain.usecase.IsUserLoggedInUseCase
 import com.dsquares.library.domain.usecase.LoginByPhoneNumberUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val loginByPhoneNumberUseCase: LoginByPhoneNumberUseCase) : ViewModel() {
+class LoginViewModel(
+    private val loginByPhoneNumberUseCase: LoginByPhoneNumberUseCase,
+    private val isUserLoggedInUseCase: IsUserLoggedInUseCase
+) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
+
+    private val _isUserLoggedIn = MutableStateFlow(false)
+    val isUserLoggedIn: StateFlow<Boolean> = _isUserLoggedIn.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _isUserLoggedIn.value = isUserLoggedInUseCase()
+        }
+    }
 
     fun login(phone: String) {
         if (_loginState.value is LoginUiState.Loading) return
