@@ -1,6 +1,8 @@
 package com.dsquares.library.security
 
 import android.util.Base64
+import android.util.Log
+import com.dsquares.library.constants.TAG
 import javax.crypto.Cipher
 import javax.crypto.spec.GCMParameterSpec
 
@@ -29,7 +31,8 @@ class CryptoManager internal constructor(
             // Combine IV + encrypted data into one array for storage
             val combined = iv + encrypted
             Base64.encodeToString(combined, Base64.NO_WRAP)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to encrypt: ${e.message}")
             null
         }
     }
@@ -50,7 +53,8 @@ class CryptoManager internal constructor(
             )
             // Decrypts and verifies integrity — throws exception if data was tampered with
             String(cipher.doFinal(cipherText), Charsets.UTF_8)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.d(TAG, "Failed to decrypt: ${e.message}")
             null
         }
     }
