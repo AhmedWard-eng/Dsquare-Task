@@ -71,15 +71,20 @@ A modular Android SDK that provides **phone-based authentication** and a **loyal
    cd DsquareTask
    ```
 
-2. **Open in Android Studio** — File > Open, select the project root.
+2. **Add `local.properties`** — Create a `local.properties` file in the project root (if it doesn't already exist) and add your API key:
+   ```properties
+   API_KEY=YOUR_API_KEY
+   ```
 
-3. **Sync Gradle** — Android Studio will auto-sync. If not, click *Sync Now* in the notification bar.
+3. **Open in Android Studio** — File > Open, select the project root.
 
-4. **Run the app**
+4. **Sync Gradle** — Android Studio will auto-sync. If not, click *Sync Now* in the notification bar.
+
+5. **Run the app**
    - Select the `:app` run configuration and a device/emulator (API 26+).
    - Click **Run**.
 
-5. **Run tests**
+6. **Run tests**
    ```bash
    ./gradlew :dsquares:testDebugUnitTest
    ```
